@@ -4,10 +4,9 @@ let map = null;
 let allMarkers = {};
 let markerClusterGroup = null;
 
-// 🔥 REPLACE THIS URL WITH YOUR GOOGLE SHEET CSV URL
-// https://docs.google.com/spreadsheets/d/e/2PACX-1vSKY3l6jRcq-uNKdIM4xMbHfCWHrZj4-wH3M_MV_2ZYfyusw6uTA2Yi8ncA-LonHIvGk6e9SvT0e2oi/pub?gid=0&single=true&output=csv
 
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSKY3l6jRcq-uNKdIM4xMbHfCWHrZj4-wH3M_MV_2ZYfyusw6uTA2Yi8ncA-LonHIvGk6e9SvT0e2oi/pub?gid=0&single=true&output=csv';
+const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7UWrVDmXzeG8UHvLU6NAuGucC9GPMy5CRQTzl4pX_BqqRTXnKcczWu78U0oO8dpUR06H5-a_dnHIM/pub?gid=0&single=true&output=csv';
+// const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSKY3l6jRcq-uNKdIM4xMbHfCWHrZj4-wH3M_MV_2ZYfyusw6uTA2Yi8ncA-LonHIvGk6e9SvT0e2oi/pub?gid=0&single=true&output=csv';
 
 $(document).ready(function() {
     $.fn.dataTable.ext.errMode = 'none';

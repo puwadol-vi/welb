@@ -15,15 +15,16 @@ A web application to display and search Bitcoin-accepting shops in Thailand. The
 
 ```
 welb/
+├── favicon.ico             ← Add here
+├── index.html              # Root landing page
+├── assets/
+│   ├── main.css            # Landing page styles
+│   └── main.js             # Landing page JavaScript logic
 ├── shop/
 │   ├── index.html          # Shop page
 │   └── assets/
 │       ├── main.css        # Shop styles
 │       └── main.js         # Shop JavaScript logic
-├── index.html              # Root landing page
-├── assets/
-│   ├── main.css            # Landing page styles
-│   └── main.js             # Landing page JavaScript logic
 └── README.md               # This file
 ```
 
@@ -42,24 +43,45 @@ You need one of the following to run a local web server:
 #### Option 1: Using Node.js (Recommended)
 
 ```bash
-npx http-server -p 8000 -c-1
+npx http-server -p 8080 -c-1
 ```
 
 **Note**: The `-c-1` flag disables caching for development.
 
 Then open:
-- **Landing Page**: `http://localhost:8000/`
-- **Shop Page**: `http://localhost:8000/shop/`
+- **Landing Page**: `http://localhost:8080/`
+- **Shop Page**: `http://localhost:8080/shop/`
 
 #### Option 2: Using Python
 
 ```bash
-python3 -m http.server 8000
+python3 -m http.server 8080
 ```
 
 Then open:
-- **Landing Page**: `http://localhost:8000/`
-- **Shop Page**: `http://localhost:8000/shop/`
+- **Landing Page**: `http://localhost:8080/`
+- **Shop Page**: `http://localhost:8080/shop/`
+
+## 🚀 Production Deployment
+
+### Cloudflare Pages
+
+This static site can be deployed to Cloudflare Pages with zero build configuration.
+
+#### Deploy via Git (Recommended)
+
+1. Push your code to GitHub/GitLab
+2. Connect your repository to Cloudflare Pages
+3. Use these settings:
+   - **Build command:** *(leave empty)*
+   - **Build output directory:** `.`
+   - **Root directory:** `/`
+
+#### Deploy Command
+
+```bash
+npx http-server -p 8000
+```
 
 ## 📊 Google Sheets Integration
 
@@ -156,7 +178,7 @@ If you're not seeing your changes:
 
 3. **Use http-server with cache-busting**:
    ```bash
-   npx http-server -p 8000 -c-1
+   npx http-server -p 8080 -c-1
    ```
 
 ### Modifying Styles
