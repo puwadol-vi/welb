@@ -15,16 +15,20 @@ A web application to display and search Bitcoin-accepting shops in Thailand. The
 
 ```
 welb/
-├── favicon.ico             ← Add here
 ├── index.html              # Root landing page
 ├── assets/
-│   ├── main.css            # Landing page styles
-│   └── main.js             # Landing page JavaScript logic
+│   └── icon.png            # Favicon
 ├── shop/
-│   ├── index.html          # Shop page
+│   ├── index.html          # Shop listing page
 │   └── assets/
 │       ├── main.css        # Shop styles
 │       └── main.js         # Shop JavaScript logic
+├── event/
+│   ├── index.html          # Event page template
+│   ├── detail.html         # Event detail page template
+│   └── assets/
+│       ├── style.css       # Event detail styles
+│       ├── events.js       # Event detail JavaScript
 └── README.md               # This file
 ```
 
