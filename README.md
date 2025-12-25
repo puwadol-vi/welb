@@ -84,7 +84,7 @@ This static site can be deployed to Cloudflare Pages with zero build configurati
 #### Deploy Command
 
 ```bash
-npx http-server -p 8000
+npx http-server -p 8080
 ```
 
 ## 📊 Google Sheets Integration

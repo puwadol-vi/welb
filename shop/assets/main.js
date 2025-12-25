@@ -1,26 +1,27 @@
-// Bitcoin Shops Thailand - Main JavaScript
-
 let map = null;
 let allMarkers = {};
 let markerClusterGroup = null;
 
-
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7UWrVDmXzeG8UHvLU6NAuGucC9GPMy5CRQTzl4pX_BqqRTXnKcczWu78U0oO8dpUR06H5-a_dnHIM/pub?gid=0&single=true&output=csv';
-// const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSKY3l6jRcq-uNKdIM4xMbHfCWHrZj4-wH3M_MV_2ZYfyusw6uTA2Yi8ncA-LonHIvGk6e9SvT0e2oi/pub?gid=0&single=true&output=csv';
-
 $(document).ready(function() {
     $.fn.dataTable.ext.errMode = 'none';
-    
-    // 🚀 Add cache-busting timestamp to force fresh data on every page load
-    const cacheBustedUrl = GOOGLE_SHEET_CSV_URL + '&timestamp=' + new Date().getTime();
-    
-    // Load data from Google Sheets instead of local CSV
-    Papa.parse(cacheBustedUrl, {
+    Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vR7UWrVDmXzeG8UHvLU6NAuGucC9GPMy5CRQTzl4pX_BqqRTXnKcczWu78U0oO8dpUR06H5-a_dnHIM/pub?output=csv', {
         download: true, header: true, skipEmptyLines: true,
         complete: function(results) {
             let data = results.data.filter(row => row.name && row.name.trim() !== '');
             
-            // Shuffle data for random display
+            // Map the new CSV structure to the old structure
+            data = data.map(row => ({
+                name: row.name,
+                category: row.category,
+                province: row.province,
+                phone: row.phone,
+                final_link: row.contact_link,
+                lat: row.lat,
+                lon: row.lon,
+                details: row.opening_hours || '',
+                google_map_link: row.google_map_link
+            }));
+            
             for (let i = data.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [data[i], data[j]] = [data[j], data[i]];
@@ -29,8 +30,7 @@ $(document).ready(function() {
             initApp(data);
         },
         error: function(err) {
-            $('#loadingSpinner').html('<p class="text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูลจาก Google Sheet<br><small>กรุณาตรวจสอบว่า Sheet ถูกเผยแพร่แล้ว (File → Share → Publish to web)</small></p>');
-            console.error('CSV Load Error:', err);
+            $('#loadingSpinner').html('<p class="text-danger">เกิดข้อผิดพลาดในการโหลดไฟล์ CSV</p>');
         }
     });
     $('#btnList').click(function() { switchView('list'); });
@@ -142,7 +142,7 @@ function initMap(data) {
     data.forEach((row, index) => {
         if(row.lat && row.lon && !isNaN(row.lat) && !isNaN(row.lon)) {
             let badgeClass = getBadgeClass(row.category || '');
-            let googleMapLink = `https://www.google.com/maps/search/?api=1&query=${row.lat},${row.lon}`;
+            let googleMapLink = row.google_map_link || `https://www.google.com/maps/search/?api=1&query=${row.lat},${row.lon}`;
             let popupContent = `
                 <div class="map-popup text-center">
                     <h6 class="fw-bold mb-1">${row.name}</h6>
@@ -177,4 +177,3 @@ function getLinkHtml(row) {
     else if(row.final_link.includes('instagram')) { btnClass = 'btn-ig'; icon = 'fa-instagram'; label = 'Instagram'; }
     return `<a href="${row.final_link}" target="_blank" class="btn btn-contact ${btnClass}"><i class="fab ${icon} me-1"></i> ${label}</a>`;
 }
-
