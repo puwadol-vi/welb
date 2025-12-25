@@ -1,6 +1,46 @@
 // *** สำคัญ: เปลี่ยนเป็น Production URL ของคุณ ***
 const WEBHOOK_URL = 'https://n8n.kaetkung.uk/webhook/register-event'; 
 
+// Load statistics from CSV
+function loadStats() {
+    if (typeof Papa === 'undefined') {
+        console.warn('PapaParse not loaded, skipping stats');
+        return;
+    }
+    
+    Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vR7UWrVDmXzeG8UHvLU6NAuGucC9GPMy5CRQTzl4pX_BqqRTXnKcczWu78U0oO8dpUR06H5-a_dnHIM/pub?output=csv', {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+            const data = results.data.filter(row => row.name && row.name.trim() !== '');
+            
+            // Count unique values
+            const provinces = [...new Set(data.map(d => d.province).filter(Boolean))];
+            const categories = [...new Set(data.map(d => d.category).filter(Boolean))];
+            
+            // Update DOM elements by ID
+            const shopCountEl = document.getElementById('shopCount');
+            const provinceCountEl = document.getElementById('provinceCount');
+            const categoryCountEl = document.getElementById('categoryCount');
+            
+            if (shopCountEl) shopCountEl.textContent = data.length + '+';
+            if (provinceCountEl) provinceCountEl.textContent = provinces.length + '+';
+            if (categoryCountEl) categoryCountEl.textContent = categories.length + '+';
+        },
+        error: function(err) {
+            console.error('Error loading stats:', err);
+        }
+    });
+}
+
+// Load stats when page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadStats);
+} else {
+    loadStats();
+}
+
 function toggleMenu() {
     document.getElementById('mobileMenu').classList.toggle('active');
 }
