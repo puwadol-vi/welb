@@ -25,7 +25,7 @@ let filteredEvents = [];
 // Load events from CSV
 async function loadEvents() {
     try {
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBM6wStS4hY_N-6mz2JXz-OIzLYTkvduELyVbwYTijgyiCe2ufxWNJCEkPvhfQv2izp86aR4C9JucM/pub?gid=0&single=true&output=csv';
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTSiaMdxeqDS4AOKRW3goruOXCVbP7z9MFqbH66lYZEvqVFMgN3dy6mmgVcehRY0ROjawBNYN9ts4oT/pub?output=csv';
         const response = await fetch(csvUrl);
         
         if (!response.ok) {
@@ -39,7 +39,21 @@ async function loadEvents() {
             dynamicTyping: false,
             skipEmptyLines: true,
             complete: function(results) {
-                allEvents = results.data;
+                // Map new CSV structure to expected format
+                allEvents = results.data.filter(row => row.id && row.name).map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    date_time: row.date_time,
+                    startDate: parseDateTimeField(row.date_time),
+                    location: row.location,
+                    locationCity: row.location,
+                    description: row.description || '',
+                    status: row.status || 'Open',
+                    capacity: row.capacity || '',
+                    organizerName: 'WelB',
+                    registerPrice: 0
+                }));
+                
                 filteredEvents = allEvents;
                 
                 // Sort by date (newest first)
@@ -59,6 +73,29 @@ async function loadEvents() {
         
     } catch (error) {
         showError('Failed to load events: ' + error.message);
+    }
+}
+
+// Parse date_time field (format: "25/12/2025, 17:00-21.00 น.")
+function parseDateTimeField(dateTimeStr) {
+    if (!dateTimeStr) return new Date();
+    
+    try {
+        // Extract date part (e.g., "25/12/2025")
+        const datePart = dateTimeStr.split(',')[0].trim();
+        const [day, month, year] = datePart.split('/');
+        
+        // Extract time part (e.g., "17:00")
+        const timePart = dateTimeStr.includes(',') ? dateTimeStr.split(',')[1].trim() : '00:00';
+        const timeMatch = timePart.match(/(\d{1,2}):(\d{2})/);
+        const hour = timeMatch ? timeMatch[1] : '00';
+        const minute = timeMatch ? timeMatch[2] : '00';
+        
+        // Create ISO date string
+        return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+    } catch (e) {
+        console.error('Error parsing date:', dateTimeStr, e);
+        return new Date();
     }
 }
 
@@ -234,7 +271,7 @@ async function loadEventData() {
     
     try {
         // Load events data from CSV file with cache-busting
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBM6wStS4hY_N-6mz2JXz-OIzLYTkvduELyVbwYTijgyiCe2ufxWNJCEkPvhfQv2izp86aR4C9JucM/pub?gid=0&single=true&output=csv';
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTSiaMdxeqDS4AOKRW3goruOXCVbP7z9MFqbH66lYZEvqVFMgN3dy6mmgVcehRY0ROjawBNYN9ts4oT/pub?output=csv';
         const response = await fetch(csvUrl);
         
         if (!response.ok) {
@@ -249,7 +286,22 @@ async function loadEventData() {
             dynamicTyping: false,
             skipEmptyLines: true,
             complete: function(results) {
-                const event = results.data.find(e => e.id === eventId);
+                // Map new CSV structure to expected format
+                const events = results.data.filter(row => row.id && row.name).map(row => ({
+                    id: row.id,
+                    name: row.name,
+                    date_time: row.date_time,
+                    startDate: parseDateTimeField(row.date_time),
+                    location: row.location,
+                    locationCity: row.location,
+                    description: row.description || '',
+                    status: row.status || 'Open',
+                    capacity: row.capacity || '',
+                    organizerName: 'WelB',
+                    registerPrice: 0
+                }));
+                
+                const event = events.find(e => e.id === eventId);
                 
                 if (!event) {
                     showError('Event not found');
