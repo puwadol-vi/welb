@@ -42,7 +42,10 @@ if (document.readyState === 'loading') {
 }
 
 function toggleMenu() {
-    document.getElementById('mobileMenu').classList.toggle('active');
+    const menu = document.getElementById('mobileNavMenu');
+    if (menu) {
+        menu.classList.toggle('active');
+    }
 }
 
 function toggleFaq(el) {
@@ -102,8 +105,9 @@ function openShopModal(e) {
     }
     document.getElementById('shopModal').classList.add('active');
     document.body.style.overflow = 'hidden';
-    if(document.getElementById('mobileMenu')) {
-        document.getElementById('mobileMenu').classList.remove('active');
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    if(mobileMenu) {
+        mobileMenu.classList.remove('active');
     }
 }
 
@@ -177,23 +181,16 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
             const target = document.querySelector(href);
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth' });
-                document.getElementById('mobileMenu').classList.remove('active');
+                const mobileMenu = document.getElementById('mobileNavMenu');
+                if(mobileMenu) {
+                    mobileMenu.classList.remove('active');
+                }
             }
         }
     });
 });
 
-// Nav scroll effect
-window.addEventListener('scroll', () => {
-    const nav = document.querySelector('nav');
-    if (window.scrollY > 20) {
-        nav.style.background = 'rgba(5, 5, 5, 0.9)';
-        nav.style.boxShadow = '0 10px 30px -10px rgba(0,0,0,0.5)';
-    } else {
-        nav.style.background = 'rgba(5, 5, 5, 0.8)';
-        nav.style.boxShadow = 'none';
-    }
-});
+// Nav scroll effect is now handled in navbar.js
 
 // ปิด Modal เมื่อคลิกนอก Modal
 window.addEventListener('click', (e) => {

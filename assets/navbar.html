@@ -1,0 +1,35 @@
+<nav id="welb-navbar">
+    <div class="container nav-inner">
+        <a href="/" class="logo">
+            <div class="logo-icon">₿</div>
+            <span>WelB</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="/">หน้าแรก</a></li>
+            <li><a href="/shop/">ร้านค้า</a></li>
+            <li><a href="/event/">กิจกรรม</a></li>
+            <li><a href="https://geyser.fund/project/welb" target="_blank">Support Us</a></li>
+            <li><a href="/#" class="nav-cta" onclick="if(typeof openShopModal === 'function') { openShopModal(event); } else { window.location.href='/'; }">เพิ่มร้านค้า</a></li>
+        </ul>
+        <button class="menu-btn" onclick="toggleNavMenu()">☰</button>
+    </div>
+</nav>
+
+<div class="mobile-menu" id="mobileNavMenu">
+    <button class="mobile-close" onclick="toggleNavMenu()">×</button>
+    <a href="/" onclick="toggleNavMenu()">หน้าแรก</a>
+    <a href="/shop/" onclick="toggleNavMenu()">ร้านค้า</a>
+    <a href="/event/" onclick="toggleNavMenu()">กิจกรรม</a>
+    <a href="https://geyser.fund/project/welb" target="_blank">Support Us</a>
+    <a href="/#" onclick="if(typeof openShopModal === 'function') { openShopModal(event); } else { window.location.href='/'; }">เพิ่มร้านค้าใหม่</a>
+</div>
+
+<script>
+function toggleNavMenu() {
+    const menu = document.getElementById('mobileNavMenu');
+    if (menu) {
+        menu.classList.toggle('active');
+    }
+}
+</script>
+

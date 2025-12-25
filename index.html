@@ -15,39 +15,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/navbar.css">
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+    <script src="assets/navbar.js"></script>
     <div class="glow-bg"></div>
-
-    <nav>
-        <div class="container nav-inner">
-            <a href="#" class="logo">
-                <div class="logo-icon">₿</div>
-                <span>WelB</span>
-            </a>
-            <ul class="nav-links">
-                <li><a href="#events">กิจกรรม</a></li>
-                <li><a href="#community">ชุมชน</a></li>
-                <li><a href="#how">วิธีเข้าร่วม</a></li>
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="https://geyser.fund/project/welb" target="_blank">Support Us</a></li>
-                <li><a href="https://shop.kaetkung.uk" target="_blank" class="nav-cta">ดูร้านค้า</a></li>
-            </ul>
-            <button class="menu-btn" onclick="toggleMenu()">☰</button>
-        </div>
-    </nav>
-
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="mobile-close" onclick="toggleMenu()">×</button>
-        <a href="#events" onclick="toggleMenu()">กิจกรรม</a>
-        <a href="#community" onclick="toggleMenu()">ชุมชน</a>
-        <a href="#how" onclick="toggleMenu()">วิธีเข้าร่วม</a>
-        <a href="#faq" onclick="toggleMenu()">FAQ</a>
-        <a href="https://geyser.fund/project/welb" target="_blank">Support Us</a>
-        <a href="https://shop.kaetkung.uk" target="_blank">ดูร้านค้าทั้งหมด</a>
-        <a href="#" onclick="openShopModal(event)">เพิ่มร้านค้าใหม่</a>
-    </div>
 
     <section class="hero">
         <div class="container">
@@ -101,12 +74,12 @@
                 ==================== คำแนะนำสำหรับ n8n ====================
                 
                 ให้ n8n generate HTML โดยใช้รูปแบบนี้ (เพิ่ม class="event-description" และปุ่ม expand):
-                
-                <div class="card" style="border-left: 4px solid var(--orange);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:1rem; align-items:center;">
+        
+        <div class="card" style="border-left: 4px solid var(--orange);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem; align-items:center;">
                         <span style="color:var(--orange); font-family:monospace; font-size:0.9rem;">{{DATE}}</span>
                         <span style="color:#00FF00; border:1px solid #00FF00; padding:2px 8px; font-size:0.7rem; border-radius:4px;">{{STATUS}}</span>
-                    </div>
+            </div>
                     <h3 style="margin-bottom:0.5rem;">{{EVENT_NAME}}</h3>
                     <p style="margin-bottom:0.5rem; font-size:0.9rem; color:#ccc;">📍 {{LOCATION}}</p>
                     <p class="event-description" style="font-size:0.9rem; color:#aaa; margin-bottom:0;">{{DESCRIPTION}}</p>
@@ -115,8 +88,8 @@
                     <button class="btn btn-outline event-register-btn" 
                             style="width:100%; margin-top:auto; justify-content:center;"
                             data-event="{{EVENT_NAME}}">
-                        ลงทะเบียน
-                    </button>
+                ลงทะเบียน
+            </button>
                 </div>
                 
                 สำคัญ: 
@@ -127,7 +100,7 @@
             -->
             <div class="cards-grid">
                 {{EVENTS_SECTION}}
-            </div>
+        </div>
             
         </div>
     </section>
