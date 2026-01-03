@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bitcoin Shops Thailand</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+    <style>
+        :root { --btc-orange: #F7931A; --bg-light: #f4f6f8; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-light); padding-bottom: 60px; }
+        .hero-header { background: linear-gradient(135deg, #F7931A 0%, #FF9F43 100%); color: white; padding: 1.5rem 0 3rem 0; margin-bottom: -30px; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(247, 147, 26, 0.3); position: relative; z-index: 1; }
+        .welb-credit { background: rgba(255, 255, 255, 0.2); padding: 2px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; display: inline-block; margin-top: 10px; backdrop-filter: blur(5px); }
+        .stat-box { background: white; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .stat-number { font-size: 1.4rem; font-weight: 800; color: var(--btc-orange); line-height: 1.2; }
+        .stat-label { font-size: 0.75rem; color: #6c757d; }
+        .sticky-filter { position: sticky; top: 0; z-index: 100; background: rgba(244, 246, 248, 0.98); backdrop-filter: blur(5px); padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .view-toggler { display: flex; justify-content: center; margin-bottom: 15px; }
+        .btn-toggle { background: white; border: 1px solid #dee2e6; padding: 8px 20px; color: #6c757d; font-weight: 600; font-size: 0.9rem; }
+        .btn-toggle:first-child { border-radius: 50px 0 0 50px; }
+        .btn-toggle:last-child { border-radius: 0 50px 50px 0; }
+        .btn-toggle.active { background-color: var(--btc-orange); color: white; border-color: var(--btc-orange); }
+        .badge-cat { font-weight: 500; padding: 5px 10px; border-radius: 6px; font-size: 0.85em; white-space: nowrap; }
+        .bg-food { background-color: #FFF3CD; color: #856404; }
+        .bg-accom { background-color: #D1ECF1; color: #0C5460; }
+        .bg-shop { background-color: #F8D7DA; color: #721C24; }
+        .bg-health { background-color: #E2E3E5; color: #383D41; }
+        .bg-cannabis { background-color: #D4EDDA; color: #155724; }
+        .bg-service { background-color: #E0CFFC; color: #4c0bce; }
+        .btn-contact { border-radius: 50px; font-weight: 600; font-size: 0.9rem; padding: 5px 15px; transition: all 0.2s; }
+        .btn-fb { background-color: white; border: 1px solid #1877F2; color: #1877F2; }
+        .btn-fb:hover { background-color: #1877F2; color: white; }
+        .btn-ig { background-color: white; border: 1px solid #E1306C; color: #E1306C; }
+        .btn-ig:hover { background-color: #E1306C; color: white; }
+        .btn-web { background-color: white; border: 1px solid #6c757d; color: #6c757d; }
+        .btn-web:hover { background-color: #6c757d; color: white; }
+        .btn-jumptomap { background-color: transparent; border: 1px solid #28a745; color: #28a745; border-radius: 50px; font-size: 0.8rem; padding: 4px 10px; margin-right: 8px; transition: all 0.2s; }
+        .btn-jumptomap:hover { background-color: #28a745; color: white; }
+        .main-card { background: white; border-radius: 15px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.03); overflow: hidden; padding-bottom: 15px; }
+        #map { height: 600px; width: 100%; border-radius: 15px; z-index: 1; }
+        .map-popup .leaflet-popup-content-wrapper { border-radius: 12px; }
+        .map-popup .btn-map-dir { font-size: 0.8rem; width: 100%; margin-top: 8px; }
+        #loadingSpinner { padding: 60px 0; text-align: center; background: rgba(255,255,255,0.8); border-radius: 15px; margin-top: 20px; }
+        .dataTables_wrapper .row:last-child { margin-top: 20px; align-items: center; padding: 0 15px; }
+        .page-link { border-radius: 50% !important; margin: 0 3px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border: none; color: #6c757d; font-weight: 600; transition: all 0.2s; }
+        .page-link:hover { background-color: #e9ecef; color: var(--btc-orange); }
+        .page-item.active .page-link { background-color: var(--btc-orange); color: white; box-shadow: 0 4px 10px rgba(247, 147, 26, 0.3); }
+        .page-item.disabled .page-link { background-color: transparent; color: #dee2e6; }
+
+        @media (max-width: 768px) {
+            #map { height: 70vh; }
+            table.dataTable thead { display: none; }
+            table.dataTable tbody tr { display: block; margin-bottom: 20px; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f8f9fa; padding: 15px; position: relative; }
+            table.dataTable tbody td { display: block; text-align: left; padding: 2px 0 !important; border: none !important; }
+            table.dataTable tbody td:nth-child(1) { font-size: 1.2rem; margin-bottom: 8px; border-bottom: 1px solid #eee !important; padding-bottom: 8px !important; }
+            table.dataTable tbody td:nth-child(2) { display: inline-block; margin-right: 5px; }
+            table.dataTable tbody td:nth-child(3) { display: inline-block; }
+            table.dataTable tbody td:nth-child(4) { margin-top: 12px; padding-top: 10px !important; border-top: 1px solid #f8f9fa !important; text-align: center; }
+            table.dataTable tbody td:nth-child(4) .btn-contact { width: 100%; display: block; padding: 8px 0; }
+            table.dataTable tbody td:nth-child(4):empty { display: none; }
+            div.dataTables_wrapper div.dataTables_info { display: none; }
+            div.dataTables_wrapper div.dataTables_paginate ul.pagination { justify-content: center !important; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-header">
+        <div class="container text-center">
+            <h1 class="fw-bold mb-1"><i class="fa-brands fa-bitcoin"></i> Bitcoin Shops</h1>
+            <p class="mb-0 opacity-75 small">ร้านค้าที่รับ Bitcoin ในประเทศไทย</p>
+            <div class="welb-credit">Developed by WelB</div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top: -25px; position: relative; z-index: 2;">
+        <div class="row g-2 mb-3">
+            <div class="col-4">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalShops">-</div>
+                    <div class="stat-label">ร้านค้า</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalProvinces">-</div>
+                    <div class="stat-label">จังหวัด</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalCats">-</div>
+                    <div class="stat-label">หมวดหมู่</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingSpinner">
+            <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;"></div>
+            <p class="mt-3 text-muted fw-bold">กำลังโหลดข้อมูลร้านค้า...</p>
+        </div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="view-toggler">
+                <div class="btn-group">
+                    <button class="btn btn-toggle active" id="btnList"><i class="fas fa-list me-1"></i> รายชื่อ</button>
+                    <button class="btn btn-toggle" id="btnMap"><i class="fas fa-map-marked-alt me-1"></i> แผนที่</button>
+                </div>
+            </div>
+
+            <div id="listViewSection">
+                <div class="sticky-filter">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="ค้นหาร้าน, อาหาร...">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <select id="provinceFilter" class="form-select form-select-sm">
+                                <option value="">📍 ทุกจังหวัด</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select id="categoryFilter" class="form-select form-select-sm">
+                                <option value="">🏷️ หมวดหมู่</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-card p-0 p-md-3">
+                    <table id="shopsTable" class="table table-hover w-100 align-middle" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 35%">ชื่อร้าน</th>
+                                <th style="width: 20%">หมวดหมู่</th>
+                                <th style="width: 20%">จังหวัด</th>
+                                <th style="width: 25%">ติดต่อ</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="mapViewSection" style="display: none;">
+                <div class="main-card p-2">
+                    <div id="map"></div>
+                </div>
+                <div class="text-center mt-2 small text-muted">
+                    <i class="fas fa-info-circle"></i> จิ้มที่กลุ่มตัวเลขเพื่อขยาย หรือจิ้มที่หมุดเพื่อดูรายละเอียด
+                </div>
+            </div>
+
+            <div class="text-center mt-4 text-muted" style="font-size: 0.8rem;">
+                <p>ข้อมูลจาก OpenStreetMap | อัปเดต: <span id="lastUpdate"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        let map = null;
+        let allMarkers = {};
+        let markerClusterGroup = null;
+
+        $(document).ready(function() {
+            $.fn.dataTable.ext.errMode = 'none';
+            Papa.parse('cleaned_bitcoin_shops.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    let data = results.data.filter(row => row.name && row.name.trim() !== '');
+                    
+                    for (let i = data.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [data[i], data[j]] = [data[j], data[i]];
+                    }
+
+                    initApp(data);
+                },
+                error: function(err) {
+                    $('#loadingSpinner').html('<p class="text-danger">เกิดข้อผิดพลาดในการโหลดไฟล์ CSV</p>');
+                }
+            });
+            $('#btnList').click(function() { switchView('list'); });
+            $('#btnMap').click(function() { switchView('map'); });
+        });
+
+        function switchView(viewName) {
+            if(viewName === 'list') {
+                $('#btnList').addClass('active'); $('#btnMap').removeClass('active');
+                $('#listViewSection').show(); $('#mapViewSection').hide();
+            } else {
+                $('#btnMap').addClass('active'); $('#btnList').removeClass('active');
+                $('#listViewSection').hide(); $('#mapViewSection').show();
+                if(map) setTimeout(() => map.invalidateSize(), 200);
+            }
+        }
+
+        function jumpToMap(index) {
+            switchView('map');
+            const marker = allMarkers[index];
+            if (marker && markerClusterGroup) {
+                setTimeout(() => {
+                    markerClusterGroup.zoomToShowLayer(marker, function() { marker.openPopup(); });
+                }, 300);
+            }
+        }
+
+        function initApp(data) {
+            $('#loadingSpinner').fadeOut(300, function() { $('#mainContent').fadeIn(300); });
+
+            const rawCategories = [...new Set(data.map(d => d.category).filter(Boolean))];
+            const categories = rawCategories.filter(c => c.length < 30).sort();
+            const provinces = [...new Set(data.map(d => d.province).filter(Boolean))];
+
+            provinces.sort((a, b) => {
+                const isThaiA = /^[ก-๙]/.test(a); const isThaiB = /^[ก-๙]/.test(b);
+                if (isThaiA && !isThaiB) return -1; if (!isThaiA && isThaiB) return 1;
+                return a.localeCompare(b, 'th');
+            });
+
+            $('#lastUpdate').text(new Date().toLocaleDateString('th-TH'));
+            provinces.forEach(p => $('#provinceFilter').append(`<option value="${p}">${p}</option>`));
+            categories.forEach(c => $('#categoryFilter').append(`<option value="${c}">${c}</option>`));
+
+            const tableData = data.map((row, index) => {
+                const cat = row.category || 'Others';
+                let badgeClass = getBadgeClass(cat);
+                let linkHtml = getLinkHtml(row);
+                let phoneHtml = row.phone ? `<div class="small text-muted mt-1"><i class="fas fa-phone-alt me-1"></i> ${row.phone}</div>` : '';
+                let mapBtnHtml = '';
+                if(row.lat && row.lon && !isNaN(row.lat)) {
+                    mapBtnHtml = `<button onclick="jumpToMap(${index})" class="btn btn-jumptomap" title="ดูบนแผนที่"><i class="fas fa-map-marker-alt"></i></button>`;
+                }
+                return [
+                    `<div class="fw-bold text-dark">${row.name}</div>${phoneHtml}`,
+                    `<span class="badge badge-cat ${badgeClass}">${cat}</span>`,
+                    `<div class="d-flex align-items-center">${mapBtnHtml}<span class="text-secondary">${row.province || '-'}</span></div>`,
+                    linkHtml, row.details || ''
+                ];
+            });
+
+            const table = $('#shopsTable').DataTable({
+                data: tableData, dom: '<"d-none"l>rtip', pageLength: 10, ordering: false,
+                language: {
+                    zeroRecords: "<div class='text-center py-5 text-muted'>ไม่พบข้อมูลร้านค้า</div>",
+                    info: "<span class='text-muted small'>แสดง _START_-_END_ จากทั้งหมด _TOTAL_ ร้าน</span>",
+                    infoEmpty: "ไม่พบข้อมูล", infoFiltered: "",
+                    paginate: { next: '<i class="fas fa-chevron-right"></i>', previous: '<i class="fas fa-chevron-left"></i>' }
+                },
+                columnDefs: [{ targets: 4, visible: false, searchable: true }],
+                drawCallback: function(settings) {
+                    var api = this.api();
+                    var rows = api.rows({ search: 'applied' }).data();
+                    $('#totalShops').text(rows.length);
+                    
+                    var visibleProvinces = new Set();
+                    var visibleCats = new Set();
+                    
+                    rows.each(function(r) {
+                        var provText = $('<div>').html(r[2]).text().trim();
+                        if(provText && provText !== '-') visibleProvinces.add(provText);
+                        var catText = $('<div>').html(r[1]).text().trim();
+                        if(catText) visibleCats.add(catText);
+                    });
+                    
+                    $('#totalProvinces').text(visibleProvinces.size);
+                    $('#totalCats').text(visibleCats.size);
+                }
+            });
+
+            $('#searchInput').on('keyup', function() { table.search(this.value).draw(); });
+            $('#provinceFilter').on('change', function() { table.column(2).search(this.value ? this.value : '', true, false).draw(); });
+            $('#categoryFilter').on('change', function() { table.column(1).search(this.value ? `^${this.value}$` : '', true, false).draw(); });
+            initMap(data);
+        }
+
+        function initMap(data) {
+            map = L.map('map').setView([13.7563, 100.5018], 6);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap, © CARTO', subdomains: 'abcd', maxZoom: 20
+            }).addTo(map);
+
+            markerClusterGroup = L.markerClusterGroup({
+                showCoverageOnHover: false,
+                disableClusteringAtZoom: 15,
+                maxClusterRadius: 30
+            });
+
+            data.forEach((row, index) => {
+                if(row.lat && row.lon && !isNaN(row.lat) && !isNaN(row.lon)) {
+                    let badgeClass = getBadgeClass(row.category || '');
+                    let googleMapLink = `https://www.google.com/maps/search/?api=1&query=${row.lat},${row.lon}`;
+                    let popupContent = `
+                        <div class="map-popup text-center">
+                            <h6 class="fw-bold mb-1">${row.name}</h6>
+                            <span class="badge badge-cat ${badgeClass} mb-2">${row.category || 'General'}</span>
+                            <p class="small text-muted mb-1"><i class="fas fa-map-marker-alt"></i> ${row.province || ''}</p>
+                            <a href="${googleMapLink}" target="_blank" class="btn btn-primary btn-sm btn-map-dir text-white">
+                                <i class="fas fa-location-arrow"></i> นำทาง (Google Maps)
+                            </a>
+                        </div>`;
+                    const marker = L.marker([row.lat, row.lon]).bindPopup(popupContent);
+                    markerClusterGroup.addLayer(marker);
+                    allMarkers[index] = marker;
+                }
+            });
+            map.addLayer(markerClusterGroup);
+        }
+
+        function getBadgeClass(cat) {
+            if(cat.includes('Food') || cat.includes('Restaurant') || cat.includes('Cafe')) return 'bg-food';
+            if(cat.includes('Accom') || cat.includes('Hotel')) return 'bg-accom';
+            if(cat.includes('Shop') || cat.includes('Store')) return 'bg-shop';
+            if(cat.includes('Health') || cat.includes('Clinic')) return 'bg-health';
+            if(cat.includes('Cannabis') || cat.includes('Service')) return 'bg-cannabis';
+            if(cat.includes('Service')) return 'bg-service';
+            return 'bg-light text-dark';
+        }
+
+        function getLinkHtml(row) {
+            if(!row.final_link) return '<span class="text-muted small">-</span>';
+            let btnClass = 'btn-web', icon = 'fa-globe', label = 'Website';
+            if(row.final_link.includes('facebook')) { btnClass = 'btn-fb'; icon = 'fa-facebook'; label = 'Facebook'; }
+            else if(row.final_link.includes('instagram')) { btnClass = 'btn-ig'; icon = 'fa-instagram'; label = 'Instagram'; }
+            return `<a href="${row.final_link}" target="_blank" class="btn btn-contact ${btnClass}"><i class="fab ${icon} me-1"></i> ${label}</a>`;
+        }
+    </script>
+</body>
+</html>
