@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { Home, MapPin, ShoppingBag, Calendar, Layers } from "lucide-react"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Home, MapPin, ShoppingBag, Calendar, Layers } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/", label: "Home", icon: Home },
   { href: "/spots", label: "Spots", icon: MapPin },
-  { href: "/shops", label: "Shop", icon: ShoppingBag },
   { href: "/events", label: "Events", icon: Calendar },
+  { href: "/shops", label: "Shop", icon: ShoppingBag },
   { href: "/digital", label: "Digital", icon: Layers },
-]
+];
 
 export function Nav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <>
@@ -39,8 +39,11 @@ export function Nav() {
           </Link>
           <div className="flex items-center gap-1">
             {tabs.slice(1).map((tab) => {
-              const isActive = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href)
-              const Icon = tab.icon
+              const isActive =
+                tab.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(tab.href);
+              const Icon = tab.icon;
               return (
                 <Link
                   key={tab.href}
@@ -49,14 +52,14 @@ export function Nav() {
                     "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                   aria-current={isActive ? "page" : undefined}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                 </Link>
-              )
+              );
             })}
           </div>
         </div>
@@ -70,8 +73,11 @@ export function Nav() {
       >
         <div className="mx-auto flex max-w-lg items-center justify-around py-2">
           {tabs.map((tab) => {
-            const isActive = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href)
-            const Icon = tab.icon
+            const isActive =
+              tab.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(tab.href);
+            const Icon = tab.icon;
             return (
               <Link
                 key={tab.href}
@@ -80,17 +86,17 @@ export function Nav() {
                   "flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors",
                   isActive
                     ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
                 <Icon className="h-5 w-5" />
                 <span>{tab.label}</span>
               </Link>
-            )
+            );
           })}
         </div>
       </nav>
     </>
-  )
+  );
 }

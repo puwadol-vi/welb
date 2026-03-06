@@ -1,8 +1,8 @@
-import type { Event } from "@/types"
-import { MapPin, Users } from "lucide-react"
+import type { Event } from "@/types";
+import { MapPin, Users } from "lucide-react";
 
 interface EventHighlightsSliderProps {
-  events: Event[]
+  events: Event[];
 }
 
 export function EventHighlightsSlider({ events }: EventHighlightsSliderProps) {
@@ -12,9 +12,9 @@ export function EventHighlightsSlider({ events }: EventHighlightsSliderProps) {
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
       {events.map((event) => {
-        const date = new Date(event.startDate)
-        const month = date.toLocaleString("en", { month: "short" })
-        const day = date.getDate()
+        const date = new Date(event.startDate);
+        const month = date.toLocaleString("en", { month: "short" });
+        const day = date.getDate();
         return (
           <div
             key={event.id}
@@ -22,12 +22,18 @@ export function EventHighlightsSlider({ events }: EventHighlightsSliderProps) {
           >
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <span className="text-[10px] font-semibold uppercase leading-none">{month}</span>
+                <span className="text-[10px] font-semibold uppercase leading-none">
+                  {month}
+                </span>
                 <span className="text-lg font-bold leading-none">{day}</span>
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-foreground leading-tight">{event.title}</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{event.description}</p>
+                <h3 className="text-sm font-semibold text-foreground leading-tight">
+                  {event.title}
+                </h3>
+                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                  {event.description}
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -42,7 +48,9 @@ export function EventHighlightsSlider({ events }: EventHighlightsSliderProps) {
             </div>
             <p className="text-[10px] text-muted-foreground">
               {"by "}
-              <span className="font-semibold text-foreground">{event.organizerName}</span>
+              <span className="font-semibold text-foreground">
+                {event.organizerName}
+              </span>
             </p>
             {event.isPaid ? (
               <span className="self-start rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
@@ -54,8 +62,8 @@ export function EventHighlightsSlider({ events }: EventHighlightsSliderProps) {
               </span>
             )}
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

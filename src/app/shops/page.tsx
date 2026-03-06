@@ -1,32 +1,42 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { onlineProducts } from "@/lib/mock-data"
-import { ShoppingBag, MessageSquare, Search } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState, useMemo } from "react";
+import { onlineProducts } from "@/lib/mock-data";
+import { ShoppingBag, MessageSquare, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const categoryFilters = ["All", "Accessories", "Apparel", "Stickers", "Security"] as const
+const categoryFilters = [
+  "All",
+  "Accessories",
+  "Apparel",
+  "Stickers",
+  "Security",
+] as const;
 
 export default function ShopsPage() {
-  const [activeCategory, setActiveCategory] = useState<string>("All")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProducts = useMemo(() => {
     return onlineProducts.filter((p) => {
-      const matchCategory = activeCategory === "All" || p.category === activeCategory
-      const matchSearch = searchQuery === "" || 
+      const matchCategory =
+        activeCategory === "All" || p.category === activeCategory;
+      const matchSearch =
+        searchQuery === "" ||
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.sellerName.toLowerCase().includes(searchQuery.toLowerCase())
-      return matchCategory && matchSearch
-    })
-  }, [activeCategory, searchQuery])
+        p.sellerName.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCategory && matchSearch;
+    });
+  }, [activeCategory, searchQuery]);
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-6">
       {/* Header */}
       <header>
         <h1 className="text-xl font-bold text-foreground">Shop</h1>
-        <p className="text-xs text-muted-foreground">Buy Bitcoin merchandise online</p>
+        <p className="text-xs text-muted-foreground">
+          Buy Bitcoin merchandise online
+        </p>
       </header>
 
       {/* Search */}
@@ -43,8 +53,14 @@ export default function ShopsPage() {
 
       {/* Category filters */}
       <div>
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Category</p>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label="Filter by category">
+        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Category
+        </p>
+        <div
+          className="flex gap-2 overflow-x-auto pb-1"
+          role="radiogroup"
+          aria-label="Filter by category"
+        >
           {categoryFilters.map((filter) => (
             <button
               key={filter}
@@ -55,7 +71,7 @@ export default function ShopsPage() {
                 "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors",
                 activeCategory === filter
                   ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
               )}
             >
               {filter}
@@ -66,7 +82,8 @@ export default function ShopsPage() {
 
       {/* Products count */}
       <p className="text-xs text-muted-foreground">
-        {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""} found
+        {filteredProducts.length} product
+        {filteredProducts.length !== 1 ? "s" : ""} found
       </p>
 
       {/* Products grid */}
@@ -87,19 +104,29 @@ export default function ShopsPage() {
             </div>
 
             <div className="flex flex-1 flex-col gap-1">
-              <h3 className="text-xs font-semibold text-foreground leading-tight line-clamp-2">{product.title}</h3>
-              <span className="text-[10px] font-medium text-muted-foreground">{product.category}</span>
+              <h3 className="text-xs font-semibold text-foreground leading-tight line-clamp-2">
+                {product.title}
+              </h3>
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {product.category}
+              </span>
 
               <div className="mt-auto flex items-baseline gap-1">
-                <span className="text-sm font-bold text-primary">{product.price.toLocaleString()}</span>
-                <span className="text-[10px] text-muted-foreground">{product.currency}</span>
+                <span className="text-sm font-bold text-primary">
+                  {product.price.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {product.currency}
+                </span>
               </div>
             </div>
 
             <div className="border-t border-border pt-2">
               <p className="text-[10px] text-muted-foreground">
                 {"Sold by "}
-                <span className="font-semibold text-foreground">{product.sellerName}</span>
+                <span className="font-semibold text-foreground">
+                  {product.sellerName}
+                </span>
               </p>
             </div>
 
@@ -116,5 +143,5 @@ export default function ShopsPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

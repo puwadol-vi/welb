@@ -1,9 +1,19 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
-import { ShopsMap } from "@/components/spot/shops-map";
 import type { SpotModel } from "@/types/spot";
+
+const ShopsMap = dynamic(
+  () => import("@/components/spot/shops-map").then((m) => m.ShopsMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[640px] w-full rounded-xl border border-border animate-pulse bg-muted" />
+    ),
+  },
+);
 import { categories } from "@/const/categories";
 import { regions } from "@/const/regions";
 

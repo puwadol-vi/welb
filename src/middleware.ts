@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.rewrite(new URL("/not-found", request.url));
     }
     if (
-      request.nextUrl.pathname.startsWith("/events") ||
+      request.nextUrl.pathname.startsWith("/shops") ||
       request.nextUrl.pathname.startsWith("/digital")
     ) {
       return NextResponse.rewrite(new URL("/not-found", request.url));
@@ -18,5 +18,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/events", "/digital"],
+  matcher: ["/admin/:path*", "/shops", "/digital"],
 };

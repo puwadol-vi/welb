@@ -1,27 +1,37 @@
-"use client"
+"use client";
 
-import { events } from "@/lib/mock-data"
-import { Calendar, MapPin, Users, Ticket, Zap, RefreshCw, ExternalLink } from "lucide-react"
+import { events } from "@/lib/mock-data";
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Ticket,
+  Zap,
+  RefreshCw,
+  ExternalLink,
+} from "lucide-react";
 
 export default function EventsPage() {
-  const now = new Date()
-  const thisWeekEnd = new Date()
-  thisWeekEnd.setDate(now.getDate() + (7 - now.getDay()))
+  const now = new Date();
+  const thisWeekEnd = new Date();
+  thisWeekEnd.setDate(now.getDate() + (7 - now.getDay()));
 
   const weekendEvents = events.filter((e) => {
-    const d = new Date(e.startDate)
-    return d >= now && d <= thisWeekEnd
-  })
-  const featuredEvent = weekendEvents[0] || events[0]
-  const otherEvents = events.filter((e) => e.id !== featuredEvent.id)
-  const marketEvents = events.filter((e) => e.isMarketActive)
+    const d = new Date(e.startDate);
+    return d >= now && d <= thisWeekEnd;
+  });
+  const featuredEvent = weekendEvents[0] || events[0];
+  const otherEvents = events.filter((e) => e.id !== featuredEvent.id);
+  const marketEvents = events.filter((e) => e.isMarketActive);
 
   return (
     <div className="flex flex-col gap-5 px-4 pt-6">
       {/* Header */}
       <header>
         <h1 className="text-xl font-bold text-foreground">Events</h1>
-        <p className="text-xs text-muted-foreground">Meetups, conferences, and more</p>
+        <p className="text-xs text-muted-foreground">
+          Meetups, conferences, and more
+        </p>
       </header>
 
       {/* This Weekend Banner */}
@@ -30,12 +40,20 @@ export default function EventsPage() {
           <span className="mb-2 inline-block rounded-full bg-primary/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
             This Weekend
           </span>
-          <h2 className="text-lg font-bold text-foreground">{featuredEvent.title}</h2>
-          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{featuredEvent.description}</p>
+          <h2 className="text-lg font-bold text-foreground">
+            {featuredEvent.title}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+            {featuredEvent.description}
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              {new Date(featuredEvent.startDate).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+              {new Date(featuredEvent.startDate).toLocaleDateString("en", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
             </span>
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
@@ -48,7 +66,9 @@ export default function EventsPage() {
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             {"by "}
-            <span className="font-semibold text-foreground">{featuredEvent.organizerName}</span>
+            <span className="font-semibold text-foreground">
+              {featuredEvent.organizerName}
+            </span>
             {" \u00b7 "}
             {featuredEvent.location}
           </p>
@@ -67,7 +87,8 @@ export default function EventsPage() {
             {featuredEvent.isPaid ? (
               <>
                 <Ticket className="h-4 w-4" />
-                {"Buy Ticket - "}{featuredEvent.price.toLocaleString()} {featuredEvent.currency}
+                {"Buy Ticket - "}
+                {featuredEvent.price.toLocaleString()} {featuredEvent.currency}
               </>
             ) : (
               <>Register Free</>
@@ -83,7 +104,7 @@ export default function EventsPage() {
         </h2>
         <div className="flex flex-col gap-3">
           {otherEvents.map((event) => {
-            const date = new Date(event.startDate)
+            const date = new Date(event.startDate);
             return (
               <div
                 key={event.id}
@@ -94,11 +115,17 @@ export default function EventsPage() {
                     <span className="text-[10px] font-semibold uppercase leading-none">
                       {date.toLocaleString("en", { month: "short" })}
                     </span>
-                    <span className="text-lg font-bold leading-none">{date.getDate()}</span>
+                    <span className="text-lg font-bold leading-none">
+                      {date.getDate()}
+                    </span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-foreground">{event.title}</h3>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{event.description}</p>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {event.title}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {event.description}
+                    </p>
                   </div>
                 </div>
 
@@ -107,11 +134,15 @@ export default function EventsPage() {
                     <MapPin className="h-3 w-3" />
                     {event.city}
                   </span>
-                  <span className="text-muted-foreground/60">{event.location}</span>
+                  <span className="text-muted-foreground/60">
+                    {event.location}
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {"by "}
-                  <span className="font-semibold text-foreground">{event.organizerName}</span>
+                  <span className="font-semibold text-foreground">
+                    {event.organizerName}
+                  </span>
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -152,7 +183,7 @@ export default function EventsPage() {
                   )}
                 </a>
               </div>
-            )
+            );
           })}
         </div>
       </section>
@@ -172,12 +203,20 @@ export default function EventsPage() {
               >
                 <div className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">{event.title}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {event.title}
+                  </h3>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{event.marketInfo}</p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  {event.marketInfo}
+                </p>
                 <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3" />
-                  {new Date(event.startDate).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+                  {new Date(event.startDate).toLocaleDateString("en", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
                   {" \u00b7 "}
                   <MapPin className="h-3 w-3" />
                   {event.city}
@@ -188,5 +227,5 @@ export default function EventsPage() {
         </section>
       )}
     </div>
-  )
+  );
 }
