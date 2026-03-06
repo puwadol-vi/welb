@@ -1,0 +1,5 @@
+# Sensitive files - prevent AI from reading
+.env
+.env.local
+*.pem
+*.key
