@@ -45,3 +45,5 @@ Thumbs.db
 python/venv
 __pycache__
 *.pyc
+
+.open-next
