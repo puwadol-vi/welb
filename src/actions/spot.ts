@@ -42,6 +42,62 @@ export async function getSuggestSpots(): Promise<SpotModel[]> {
   return mapRows(data);
 }
 
+export type CreateSpotInput = {
+  name: string;
+  description: string;
+  type: string;
+  category: string;
+  region: string;
+  province: string;
+  googleMapLink: string;
+  provinceTh?: string | null;
+  district?: string | null;
+  districtTh?: string | null;
+  address?: string | null;
+  lat?: string | null;
+  lng?: string | null;
+  phone?: string | null;
+  facebookLink?: string | null;
+  websiteLink?: string | null;
+};
+
+export async function createSpot(
+  data: CreateSpotInput,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createServerClient();
+    const { error } = await supabase.from("spots").insert({
+      name: data.name,
+      description: data.description,
+      type: data.type,
+      category: data.category,
+      region: data.region,
+      province: data.province,
+      province_th: data.provinceTh ?? null,
+      district: data.district ?? null,
+      district_th: data.districtTh ?? null,
+      address: data.address ?? null,
+      lat: data.lat ?? null,
+      lng: data.lng ?? null,
+      google_map_link: data.googleMapLink,
+      phone: data.phone ?? null,
+      facebook_link: data.facebookLink ?? null,
+      website_link: data.websiteLink ?? null,
+      is_suggested: false,
+      is_verified: false,
+      is_local_verified: false,
+      is_active: true,
+    });
+    if (error) throw error;
+    revalidatePath("/admin/spots");
+    revalidatePath("/spots");
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating spot:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
 export async function updateSpot(
   id: number,
   data: Partial<Omit<SpotModel, "id" | "createdAt" | "updatedAt">>,

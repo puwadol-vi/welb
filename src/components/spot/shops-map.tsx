@@ -96,7 +96,7 @@ export function ShopsMap({ spots }: ShopsMapProps) {
       const lng = spot.lng ? parseFloat(spot.lng) : 0;
       if (!lat || !lng) return;
 
-      const navigateUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      const navigateUrl = spot.googleMapLink || `https://www.google.com/maps?q=${lat},${lng}`;
 
       const categoryIcon = L.divIcon({
         className: "category-marker",

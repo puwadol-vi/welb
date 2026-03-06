@@ -12,9 +12,9 @@ import provinces from "@/const/province.json";
 import districts from "@/const/district.json";
 import { subCategories } from "@/const/categories";
 import { regions } from "@/const/regions";
-import { getSpots, updateSpot } from "@/actions/spot";
+import { getSpots, updateSpot, createSpot, type CreateSpotInput } from "@/actions/spot";
 
-import { Check, X, ExternalLink, Search, Pencil, MapPin } from "lucide-react";
+import { Check, X, ExternalLink, Search, Pencil, MapPin, Plus } from "lucide-react";
 
 export function AdminSpotsList() {
   const [spots, setSpots] = useState<SpotModel[]>([]);
@@ -42,6 +42,16 @@ export function AdminSpotsList() {
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<SpotModel>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateSpotInput>({
+    name: "",
+    description: "",
+    type: "shop",
+    category: "",
+    region: "",
+    province: "",
+    googleMapLink: "",
+  });
 
   const uniqueProvinces = useMemo(
     () => Array.from(new Set(spots.map((s) => s.province))).sort(),
@@ -90,19 +100,26 @@ export function AdminSpotsList() {
     setEditData({});
   };
 
-  const handleToggleVerified = async (id: number, currentVerified: boolean) => {
-    startTransition(async () => {
-      const result = await updateSpot(id, { isVerified: !currentVerified });
-      if (result.success) await fetchSpots();
-    });
-  };
-
   const handleToggleSuggested = async (
     id: number,
     currentSuggested: boolean,
   ) => {
     startTransition(async () => {
       const result = await updateSpot(id, { isSuggested: !currentSuggested });
+      if (result.success) await fetchSpots();
+    });
+  };
+
+  const handleToggleLocalVerified = async (id: number, currentLocalVerified: boolean) => {
+    startTransition(async () => {
+      const result = await updateSpot(id, { isLocalVerified: !currentLocalVerified });
+      if (result.success) await fetchSpots();
+    });
+  };
+
+  const handleToggleVerified = async (id: number, currentVerified: boolean) => {
+    startTransition(async () => {
+      const result = await updateSpot(id, { isVerified: !currentVerified });
       if (result.success) await fetchSpots();
     });
   };
@@ -114,10 +131,43 @@ export function AdminSpotsList() {
     });
   };
 
+  const handleCreateSubmit = async () => {
+    if (
+      !createForm.name ||
+      !createForm.description ||
+      !createForm.type ||
+      !createForm.category ||
+      !createForm.region ||
+      !createForm.province ||
+      !createForm.googleMapLink
+    ) {
+      alert("Please fill name, description, type, category, region, province, and map link.");
+      return;
+    }
+    startTransition(async () => {
+      const result = await createSpot(createForm);
+      if (result.success) {
+        setShowCreateModal(false);
+        setCreateForm({
+          name: "",
+          description: "",
+          type: "shop",
+          category: "",
+          region: "",
+          province: "",
+          googleMapLink: "",
+        });
+        await fetchSpots();
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
+      {/* Filters + Create */}
+      <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -156,6 +206,14 @@ export function AdminSpotsList() {
             Inactive ({spots.filter((s) => !s.isActive).length})
           </option>
         </select>
+        <button
+          type="button"
+          onClick={() => setShowCreateModal(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" />
+          Create
+        </button>
       </div>
 
       {/* Stats */}
@@ -182,14 +240,14 @@ export function AdminSpotsList() {
               <th className="px-3 py-2 text-left font-medium">District</th>
               <th className="px-3 py-2 text-left font-medium">District (TH)</th>
               <th className="px-3 py-2 text-left font-medium">Region</th>
-              <th className="px-3 py-2 text-left font-medium">Lat</th>
-              <th className="px-3 py-2 text-left font-medium">Lng</th>
+              <th className="px-3 py-2 text-left font-medium">Lat, Lng</th>
               <th className="px-3 py-2 text-left font-medium">Map</th>
               <th className="px-3 py-2 text-left font-medium">Phone</th>
               <th className="px-3 py-2 text-left font-medium">Facebook</th>
               <th className="px-3 py-2 text-left font-medium">Website</th>
               <th className="px-3 py-2 text-center font-medium">Suggested</th>
               <th className="px-3 py-2 text-center font-medium">Verified</th>
+              <th className="px-3 py-2 text-center font-medium">Local</th>
               <th className="px-3 py-2 text-center font-medium">Active</th>
               <th className="sticky right-0 z-20 bg-muted/50 px-3 py-2 text-left font-medium border-l border-border"></th>
             </tr>
@@ -517,44 +575,27 @@ export function AdminSpotsList() {
                     )}
                   </td>
 
-                  {/* Lat */}
+                  {/* Lat, Lng */}
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editData.lat ?? ""}
-                        onChange={(e) =>
+                        value={[editData.lat ?? "", editData.lng ?? ""].join(", ").replace(/,\s*$/, "")}
+                        onChange={(e) => {
+                          const parts = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
                           setEditData({
                             ...editData,
-                            lat: e.target.value || null,
-                          })
-                        }
-                        className="w-24 rounded border border-border bg-background px-2 py-1 text-xs"
+                            lat: parts[0] || null,
+                            lng: parts[1] || null,
+                          });
+                        }}
+                        className="w-44 rounded border border-border bg-background px-2 py-1 text-xs font-mono"
                       />
                     ) : (
                       <span className="text-xs font-mono">
-                        {spot.lat ?? "-"}
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Lng */}
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editData.lng ?? ""}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            lng: e.target.value || null,
-                          })
-                        }
-                        className="w-24 rounded border border-border bg-background px-2 py-1 text-xs"
-                      />
-                    ) : (
-                      <span className="text-xs font-mono">
-                        {spot.lng ?? "-"}
+                        {spot.lat != null && spot.lng != null
+                          ? `${spot.lat}, ${spot.lng}`
+                          : "-"}
                       </span>
                     )}
                   </td>
@@ -747,6 +788,24 @@ export function AdminSpotsList() {
                     </button>
                   </td>
 
+
+                  {/* Local Verified (toggle) */}
+                  <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <button
+                      onClick={() =>
+                        handleToggleLocalVerified(spot.id, spot.isLocalVerified)
+                      }
+                      disabled={isPending}
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
+                        spot.isLocalVerified
+                          ? "bg-green-500/20 text-green-600 hover:bg-green-500/30"
+                          : "bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30"
+                      }`}
+                    >
+                      {spot.isLocalVerified ? "Verified" : "Unverified"}
+                    </button>
+                  </td>
+
                   {/* Active (toggle) */}
                   <td className="px-3 py-2 text-center whitespace-nowrap">
                     <button
@@ -801,6 +860,176 @@ export function AdminSpotsList() {
       {filteredSpots.length === 0 && (
         <div className="py-8 text-center text-muted-foreground">
           No spots found
+        </div>
+      )}
+
+      {/* Create spot modal */}
+      {showCreateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 text-lg font-semibold">Create new spot</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium">Name *</label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, name: e.target.value })
+                  }
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Spot name"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium">Description *</label>
+                <textarea
+                  value={createForm.description}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, description: e.target.value })
+                  }
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  rows={2}
+                  placeholder="Description"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium">Type *</label>
+                  <select
+                    value={createForm.type}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, type: e.target.value })
+                    }
+                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="shop">shop</option>
+                    <option value="meetup">meetup</option>
+                    <option value="course">course</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium">Category *</label>
+                  <select
+                    value={createForm.category}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, category: e.target.value })
+                    }
+                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">-- Select --</option>
+                    {subCategories.map((cat) => {
+                      const id = `${cat.category}-${cat.subCategory}`;
+                      return (
+                        <option key={id} value={id}>
+                          {cat.category} / {cat.subCategory}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium">Region *</label>
+                  <select
+                    value={createForm.region}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, region: e.target.value })
+                    }
+                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    {regions.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium">Province *</label>
+                  <select
+                    value={createForm.province}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, province: e.target.value })
+                    }
+                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    {provinces.map((p) => (
+                      <option key={p.id} value={p.name_en}>
+                        {p.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium">Google Map link *</label>
+                <input
+                  type="url"
+                  value={createForm.googleMapLink}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, googleMapLink: e.target.value })
+                  }
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="https://maps.google.com/..."
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium">Address</label>
+                <input
+                  type="text"
+                  value={createForm.address ?? ""}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      address: e.target.value || null,
+                    })
+                  }
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Optional"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium">Phone</label>
+                <input
+                  type="text"
+                  value={createForm.phone ?? ""}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      phone: e.target.value || null,
+                    })
+                  }
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateSubmit}
+                disabled={isPending}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-50"
+              >
+                {isPending ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
