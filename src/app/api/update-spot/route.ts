@@ -1,15 +1,9 @@
-export const runtime = "edge";
-
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { spots } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { createServerClient } from "@/lib/supabase";
 
-// API Key for external scraper authentication
 const API_KEY = process.env.SCRAPER_API_KEY;
 
 interface SpotPayload {
-  // Required fields
   name: string;
   description: string;
   type: string;
@@ -17,26 +11,19 @@ interface SpotPayload {
   region: string;
   province: string;
   googleMapLink: string;
-
-  // Optional location fields
   provinceTh?: string;
   district?: string;
   districtTh?: string;
   address?: string;
   lat?: number;
   lng?: number;
-
-  // Optional contact fields
   phone?: string;
   facebookLink?: string;
   websiteLink?: string;
-
-  // For updates - match by googleMapLink or id
   id?: number;
 }
 
 export async function POST(request: NextRequest) {
-  // Verify API key
   const authHeader = request.headers.get("authorization");
   const apiKey = authHeader?.replace("Bearer ", "");
 
@@ -48,7 +35,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const payload = body as SpotPayload;
 
-    // Validate required fields
     const requiredFields = [
       "name",
       "description",
@@ -67,36 +53,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const spotValues = {
-      name: payload.name,
-      description: payload.description,
-      type: payload.type,
-      category: payload.category,
-      region: payload.region,
-      province: payload.province,
-      provinceTh: payload.provinceTh ?? null,
-      district: payload.district ?? null,
-      districtTh: payload.districtTh ?? null,
-      address: payload.address ?? null,
-      lat: payload.lat?.toString() ?? null,
-      lng: payload.lng?.toString() ?? null,
-      googleMapLink: payload.googleMapLink,
-      phone: payload.phone ?? null,
-      facebookLink: payload.facebookLink ?? null,
-      websiteLink: payload.websiteLink ?? null,
-    };
-
-    // CREATE NEW SPOT
-    const [newSpot] = await db
-      .insert(spots)
-      .values({
-        ...spotValues,
-        isSuggested: false,
-        isVerified: false,
-        isLocalVerified: false,
-        isActive: false,
+    const supabase = createServerClient();
+    const { data: newSpot, error } = await supabase
+      .from("spots")
+      .insert({
+        name: payload.name,
+        description: payload.description,
+        type: payload.type,
+        category: payload.category,
+        region: payload.region,
+        province: payload.province,
+        province_th: payload.provinceTh ?? null,
+        district: payload.district ?? null,
+        district_th: payload.districtTh ?? null,
+        address: payload.address ?? null,
+        lat: payload.lat?.toString() ?? null,
+        lng: payload.lng?.toString() ?? null,
+        google_map_link: payload.googleMapLink,
+        phone: payload.phone ?? null,
+        facebook_link: payload.facebookLink ?? null,
+        website_link: payload.websiteLink ?? null,
+        is_suggested: false,
+        is_verified: false,
+        is_local_verified: false,
+        is_active: false,
       })
-      .returning();
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
@@ -114,7 +99,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to check API status
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const apiKey = authHeader?.replace("Bearer ", "");

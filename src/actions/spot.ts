@@ -1,104 +1,45 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { spots } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { createServerClient, mapRowToSpot, type SpotRow } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
-import { SpotModel } from "@/types/spot";
+import type { SpotModel } from "@/types/spot";
+
+function mapRows(rows: SpotRow[] | null): SpotModel[] {
+  if (!rows) return [];
+  return rows.map(mapRowToSpot);
+}
 
 export async function getSpots(): Promise<SpotModel[]> {
-  return await db
-    .select({
-      id: spots.id,
-      name: spots.name,
-      description: spots.description,
-      type: spots.type,
-      category: spots.category,
-      region: spots.region,
-      province: spots.province,
-      provinceTh: spots.provinceTh,
-      district: spots.district,
-      districtTh: spots.districtTh,
-      address: spots.address,
-      lat: spots.lat,
-      lng: spots.lng,
-      googleMapLink: spots.googleMapLink,
-      phone: spots.phone,
-      facebookLink: spots.facebookLink,
-      websiteLink: spots.websiteLink,
-      isSuggested: spots.isSuggested,
-      isVerified: spots.isVerified,
-      isLocalVerified: spots.isLocalVerified,
-      isActive: spots.isActive,
-      createdAt: spots.createdAt,
-      updatedAt: spots.updatedAt,
-    })
-    .from(spots)
-    .orderBy(asc(spots.id));
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("spots")
+    .select("*")
+    .order("id", { ascending: true });
+  if (error) throw error;
+  return mapRows(data);
 }
 
 export async function getActiveSpots(): Promise<SpotModel[]> {
-  return await db
-    .select({
-      id: spots.id,
-      name: spots.name,
-      description: spots.description,
-      type: spots.type,
-      category: spots.category,
-      region: spots.region,
-      province: spots.province,
-      provinceTh: spots.provinceTh,
-      district: spots.district,
-      districtTh: spots.districtTh,
-      address: spots.address,
-      lat: spots.lat,
-      lng: spots.lng,
-      googleMapLink: spots.googleMapLink,
-      phone: spots.phone,
-      facebookLink: spots.facebookLink,
-      websiteLink: spots.websiteLink,
-      isSuggested: spots.isSuggested,
-      isVerified: spots.isVerified,
-      isLocalVerified: spots.isLocalVerified,
-      isActive: spots.isActive,
-      createdAt: spots.createdAt,
-      updatedAt: spots.updatedAt,
-    })
-    .from(spots)
-    .where(eq(spots.isActive, true))
-    .orderBy(asc(spots.id));
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("spots")
+    .select("*")
+    .eq("is_active", true)
+    .order("id", { ascending: true });
+  if (error) throw error;
+  return mapRows(data);
 }
 
 export async function getSuggestSpots(): Promise<SpotModel[]> {
-  return await db
-    .select({
-      id: spots.id,
-      name: spots.name,
-      description: spots.description,
-      type: spots.type,
-      category: spots.category,
-      region: spots.region,
-      province: spots.province,
-      provinceTh: spots.provinceTh,
-      district: spots.district,
-      districtTh: spots.districtTh,
-      address: spots.address,
-      lat: spots.lat,
-      lng: spots.lng,
-      googleMapLink: spots.googleMapLink,
-      phone: spots.phone,
-      facebookLink: spots.facebookLink,
-      websiteLink: spots.websiteLink,
-      isSuggested: spots.isSuggested,
-      isVerified: spots.isVerified,
-      isLocalVerified: spots.isLocalVerified,
-      isActive: spots.isActive,
-      createdAt: spots.createdAt,
-      updatedAt: spots.updatedAt,
-    })
-    .from(spots)
-    .where(eq(spots.isActive, true) && eq(spots.isSuggested, true))
-    .orderBy(asc(spots.id));
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("spots")
+    .select("*")
+    .eq("is_active", true)
+    .eq("is_suggested", true)
+    .order("id", { ascending: true });
+  if (error) throw error;
+  return mapRows(data);
 }
 
 export async function updateSpot(
@@ -106,13 +47,31 @@ export async function updateSpot(
   data: Partial<Omit<SpotModel, "id" | "createdAt" | "updatedAt">>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await db
-      .update(spots)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(spots.id, id));
+    const supabase = createServerClient();
+    const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (data.name != null) update.name = data.name;
+    if (data.description != null) update.description = data.description;
+    if (data.type != null) update.type = data.type;
+    if (data.category != null) update.category = data.category;
+    if (data.region != null) update.region = data.region;
+    if (data.province != null) update.province = data.province;
+    if (data.provinceTh != null) update.province_th = data.provinceTh;
+    if (data.district != null) update.district = data.district;
+    if (data.districtTh != null) update.district_th = data.districtTh;
+    if (data.address != null) update.address = data.address;
+    if (data.lat != null) update.lat = data.lat;
+    if (data.lng != null) update.lng = data.lng;
+    if (data.googleMapLink != null) update.google_map_link = data.googleMapLink;
+    if (data.phone != null) update.phone = data.phone;
+    if (data.facebookLink != null) update.facebook_link = data.facebookLink;
+    if (data.websiteLink != null) update.website_link = data.websiteLink;
+    if (data.isSuggested != null) update.is_suggested = data.isSuggested;
+    if (data.isVerified != null) update.is_verified = data.isVerified;
+    if (data.isLocalVerified != null) update.is_local_verified = data.isLocalVerified;
+    if (data.isActive != null) update.is_active = data.isActive;
+
+    const { error } = await supabase.from("spots").update(update).eq("id", id);
+    if (error) throw error;
 
     revalidatePath("/admin/spots");
     revalidatePath("/spots");

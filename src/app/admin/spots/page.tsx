@@ -1,9 +1,14 @@
+import { notFound } from "next/navigation";
 import { AdminSpotsList } from "@/components/admin/spots-list";
+import { shouldShowAdminNotFound } from "@/lib/utils";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSpotsPage() {
+  if (shouldShowAdminNotFound()) {
+    notFound();
+  }
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8">
