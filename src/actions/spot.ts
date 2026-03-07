@@ -2,7 +2,14 @@
 
 import { createServerClient } from "@/lib";
 import { revalidatePath } from "next/cache";
-import { mapRowToSpot, SpotRow, SpotModel, CreateSpot } from "@/types";
+import {
+  mapRowToSpot,
+  SpotRow,
+  SpotModel,
+  CreateSpot,
+  SubmitResult,
+  CreateEvent,
+} from "@/types";
 
 function mapRows(rows: SpotRow[] | null): SpotModel[] {
   if (!rows) return [];
@@ -57,9 +64,7 @@ export async function getEventSpots(): Promise<SpotModel[]> {
   return mapRows(data);
 }
 
-export async function createSpot(
-  data: CreateSpot,
-): Promise<{ success: boolean; error?: string }> {
+export async function createSpot(data: CreateSpot): Promise<SubmitResult> {
   try {
     const supabase = createServerClient();
     const { error } = await supabase.from("spots").insert({
@@ -94,10 +99,45 @@ export async function createSpot(
   }
 }
 
+/** For home page: create event via POST /api/create-event (uses SCRAPER_API_KEY server-side). */
+export async function createSpotViaApi(
+  data: CreateSpot,
+): Promise<SubmitResult> {
+  try {
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      "http://localhost:3000";
+    const apiKey = process.env.SCRAPER_API_KEY;
+    if (!apiKey) return { success: false, error: "API not configured" };
+    const res = await fetch(`${base}/api/create-spot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: json.error ?? res.statusText };
+    }
+    if (json.success) {
+      revalidatePath("/admin/spots");
+      revalidatePath("/spots");
+      revalidatePath("/welb");
+    }
+    return { success: !!json.success, error: json.error };
+  } catch (error) {
+    console.error("Error creating spot via API:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
 export async function updateSpot(
   id: number,
   data: Partial<Omit<SpotModel, "id" | "createdAt" | "updatedAt">>,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<SubmitResult> {
   try {
     const supabase = createServerClient();
     const update: Record<string, unknown> = {

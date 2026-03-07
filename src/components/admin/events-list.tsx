@@ -3,12 +3,10 @@
 import { useState, useTransition, useCallback, useEffect } from "react";
 import { getEvents, updateEvent, createEvent } from "@/actions/event";
 import { getEventSpots } from "@/actions/spot";
-import {
-  DateTimePicker,
-  DateTimePickerString,
-} from "@/components/global/date-time-picker";
-import { organizer } from "@/const/organizer";
-import { SpotModel, EventModel, EVENT_TYPES, type CreateEvent } from "@/types";
+import { CreateEventDialog } from "@/components/global/create-event-dialog";
+import { DateTimePicker } from "@/components/global/date-time-picker";
+import { organizer } from "@/const/event";
+import { SpotModel, EventModel, EVENT_TYPES } from "@/types";
 import { Check, X, Search, Pencil, Plus, ExternalLink } from "lucide-react";
 
 function eventDate(ev: EventModel): Date {
@@ -27,22 +25,6 @@ export function AdminEventsList() {
   const [editData, setEditData] = useState<Partial<EventModel>>({});
   const [spots, setSpots] = useState<SpotModel[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateEvent>({
-    title: "",
-    description: null,
-    type: "meetup",
-    price: null,
-    currency: null,
-    startDate: new Date().toISOString().slice(0, 16),
-    endDate: null,
-    location: "",
-    organizerName: "WelB",
-    imageUrl: null,
-    eventUrl: null,
-    registrationUrl: null,
-    isWelBProject: false,
-    isMarket: false,
-  });
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -136,38 +118,6 @@ export function AdminEventsList() {
     startTransition(async () => {
       const result = await updateEvent(id, { isMarket: !current });
       if (result.success) await fetchEvents();
-    });
-  };
-
-  const handleCreateSubmit = async () => {
-    if (!createForm.title || !createForm.startDate) {
-      alert("Please fill title and start date.");
-      return;
-    }
-    startTransition(async () => {
-      const result = await createEvent(createForm);
-      if (result.success) {
-        setShowCreateModal(false);
-        setCreateForm({
-          title: "",
-          description: null,
-          type: "meetup",
-          price: null,
-          currency: null,
-          startDate: new Date().toISOString().slice(0, 16),
-          endDate: null,
-          location: "",
-          organizerName: "WelB",
-          imageUrl: null,
-          eventUrl: null,
-          registrationUrl: null,
-          isWelBProject: false,
-          isMarket: false,
-        });
-        await fetchEvents();
-      } else {
-        alert(`Error: ${result.error}`);
-      }
     });
   };
 
@@ -678,162 +628,12 @@ export function AdminEventsList() {
         </div>
       )}
 
-      {showCreateModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-4 text-lg font-semibold">Create event</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.title}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, title: e.target.value })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  placeholder="Event title"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">Type</label>
-                <select
-                  value={createForm.type ?? "meetup"}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, type: e.target.value })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                >
-                  {EVENT_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Start date & time *
-                </label>
-                <DateTimePickerString
-                  value={createForm.startDate ?? ""}
-                  onChange={(v) =>
-                    setCreateForm({ ...createForm, startDate: v, endDate: v })
-                  }
-                  placeholder="Select start date & time"
-                  inputClassName="w-full py-1.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Description
-                </label>
-                <textarea
-                  value={createForm.description ?? ""}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      description: e.target.value || null,
-                    })
-                  }
-                  rows={2}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={createForm.location ?? ""}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      location: e.target.value || "",
-                    })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Organizer
-                </label>
-                <select
-                  value={createForm.organizerName ?? ""}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      organizerName: e.target.value || "",
-                    })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                >
-                  {organizer.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={createForm.isWelBProject ?? false}
-                    onChange={(e) =>
-                      setCreateForm({
-                        ...createForm,
-                        isWelBProject: e.target.checked,
-                      })
-                    }
-                  />
-                  <span className="text-sm">WelB project</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={createForm.isMarket ?? false}
-                    onChange={(e) =>
-                      setCreateForm({
-                        ...createForm,
-                        isMarket: e.target.checked,
-                      })
-                    }
-                  />
-                  <span className="text-sm">Market</span>
-                </label>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateSubmit}
-                disabled={isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-50"
-              >
-                {isPending ? "Creating..." : "Create"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateEventDialog
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => fetchEvents()}
+        onSubmit={createEvent}
+      />
     </div>
   );
 }

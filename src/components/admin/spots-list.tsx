@@ -13,7 +13,7 @@ import districts from "@/const/district.json";
 import { subCategories } from "@/const/categories";
 import { regions } from "@/const/regions";
 import { getSpots, updateSpot, createSpot } from "@/actions/spot";
-import type { CreateSpot } from "@/types/spot";
+import { CreateSpotDialog } from "@/components/global/create-spot-dialog";
 
 import {
   Check,
@@ -52,24 +52,6 @@ export function AdminSpotsList() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<SpotModel>>({});
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateSpot>({
-    name: "",
-    description: "",
-    type: "shop",
-    category: "",
-    region: "",
-    province: "",
-    provinceTh: null,
-    district: null,
-    districtTh: null,
-    address: null,
-    lat: null,
-    lng: null,
-    googleMapLink: "",
-    phone: null,
-    facebookLink: null,
-    websiteLink: null,
-  });
 
   const uniqueProvinces = useMemo(
     () => Array.from(new Set(spots.map((s) => s.province))).sort(),
@@ -151,50 +133,6 @@ export function AdminSpotsList() {
     startTransition(async () => {
       const result = await updateSpot(id, { isActive: !currentActive });
       if (result.success) await fetchSpots();
-    });
-  };
-
-  const handleCreateSubmit = async () => {
-    if (
-      !createForm.name ||
-      !createForm.description ||
-      !createForm.type ||
-      !createForm.category ||
-      !createForm.region ||
-      !createForm.province ||
-      !createForm.googleMapLink
-    ) {
-      alert(
-        "Please fill name, description, type, category, region, province, and map link.",
-      );
-      return;
-    }
-    startTransition(async () => {
-      const result = await createSpot(createForm);
-      if (result.success) {
-        setShowCreateModal(false);
-        setCreateForm({
-          name: "",
-          description: "",
-          type: "shop",
-          category: "",
-          region: "",
-          province: "",
-          provinceTh: null,
-          district: null,
-          districtTh: null,
-          address: null,
-          lat: null,
-          lng: null,
-          googleMapLink: "",
-          phone: null,
-          facebookLink: null,
-          websiteLink: null,
-        });
-        await fetchSpots();
-      } else {
-        alert(`Error: ${result.error}`);
-      }
     });
   };
 
@@ -609,25 +547,26 @@ export function AdminSpotsList() {
                     )}
                   </td>
 
-                  {/* Lat, Lng */}
+                  {/* Lat, Lng (one input: "lat, lng") */}
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isEditing ? (
                       <input
                         type="text"
                         value={[editData.lat ?? "", editData.lng ?? ""]
                           .join(", ")
-                          .replace(/,\s*$/, "")}
+                          .replace(/,\s*$/, "")
+                          .replace(/^\s*,/, "")}
                         onChange={(e) => {
                           const parts = e.target.value
                             .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean);
+                            .map((s) => s.trim());
                           setEditData({
                             ...editData,
                             lat: parts[0] || null,
                             lng: parts[1] || null,
                           });
                         }}
+                        placeholder="lat, lng"
                         className="w-44 rounded border border-border bg-background px-2 py-1 text-xs font-mono"
                       />
                     ) : (
@@ -901,195 +840,12 @@ export function AdminSpotsList() {
         </div>
       )}
 
-      {/* Create spot modal */}
-      {showCreateModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-4 text-lg font-semibold">Create new spot</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium">Name *</label>
-                <input
-                  type="text"
-                  value={createForm.name}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, name: e.target.value })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  placeholder="Spot name"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Description *
-                </label>
-                <textarea
-                  value={createForm.description}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      description: e.target.value,
-                    })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  rows={2}
-                  placeholder="Description"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-medium">
-                    Type *
-                  </label>
-                  <select
-                    value={createForm.type}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, type: e.target.value })
-                    }
-                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="shop">shop</option>
-                    <option value="meetup">meetup</option>
-                    <option value="course">course</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium">
-                    Category *
-                  </label>
-                  <select
-                    value={createForm.category}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, category: e.target.value })
-                    }
-                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">-- Select --</option>
-                    {subCategories.map((cat) => {
-                      const id = `${cat.category}-${cat.subCategory}`;
-                      return (
-                        <option key={id} value={id}>
-                          {cat.category} / {cat.subCategory}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-medium">
-                    Region *
-                  </label>
-                  <select
-                    value={createForm.region}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, region: e.target.value })
-                    }
-                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    {regions.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium">
-                    Province *
-                  </label>
-                  <select
-                    value={createForm.province}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, province: e.target.value })
-                    }
-                    className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    {provinces.map((p) => (
-                      <option key={p.id} value={p.name_en}>
-                        {p.name_en}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Google Map link *
-                </label>
-                <input
-                  type="url"
-                  value={createForm.googleMapLink}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      googleMapLink: e.target.value,
-                    })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  placeholder="https://maps.google.com/..."
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={createForm.address ?? ""}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      address: e.target.value || null,
-                    })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  placeholder="Optional"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium">Phone</label>
-                <input
-                  type="text"
-                  value={createForm.phone ?? ""}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      phone: e.target.value || null,
-                    })
-                  }
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
-                  placeholder="Optional"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateSubmit}
-                disabled={isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-50"
-              >
-                {isPending ? "Creating..." : "Create"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateSpotDialog
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => fetchSpots()}
+        onSubmit={createSpot}
+      />
     </div>
   );
 }

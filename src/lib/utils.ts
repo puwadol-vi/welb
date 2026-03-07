@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function shouldShowAdminNotFound(): boolean {
-  return false;
+  return true;
 }
 
 export function formatDate(dateStr: string | null): string {

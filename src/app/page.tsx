@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { MapPin, Plus } from "lucide-react";
+import { createEventViaApi } from "@/actions/event";
+import { createSpotViaApi } from "@/actions/spot";
 import { getHomePageData } from "@/actions/home";
-import { EventSlider } from "@/components/home/event-highlights";
+import { Contact } from "@/components/home/contact";
+import { EventSlider } from "@/components/home/event-slider";
+import { FloatingCreateButton } from "@/components/global/floating-create-button";
 import { TopBitcoinSpots } from "@/components/home/top-spots";
 
 // ISR: Revalidate every 60 seconds
@@ -123,7 +127,18 @@ export default async function HomePage() {
           </h2>
           <EventSlider events={data.highlightEvents} href="/events" />
         </section>
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Contact & Community
+          </h2>
+          <Contact />
+        </section>
+        <div className="mb-16"></div>
       </div>
+      <FloatingCreateButton
+        onSubmitEvent={createEventViaApi}
+        onSubmitSpot={createSpotViaApi}
+      />
     </div>
   );
 }

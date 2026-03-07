@@ -8,6 +8,7 @@ import {
   EventRow,
   mapRowToEvent,
 } from "@/types/event";
+import { SubmitResult } from "@/types";
 
 function mapRows(rows: EventRow[] | null): EventModel[] {
   if (!rows) return [];
@@ -58,6 +59,33 @@ export async function getWelbEvents(): Promise<{
   return { upcomingEvents: upcoming, pastEvents: past };
 }
 
+/** For /events page: all events split into upcoming (nearest first) and past (latest first). */
+export async function getEventsForPage(): Promise<{
+  upcomingEvents: EventModel[];
+  pastEvents: EventModel[];
+}> {
+  const all = await getEvents();
+  const now = new Date();
+  const upcoming: EventModel[] = [];
+  const past: EventModel[] = [];
+  for (const e of all) {
+    const date = e.endDate ?? e.startDate;
+    if (date >= now) upcoming.push(e);
+    else past.push(e);
+  }
+  upcoming.sort((a, b) => {
+    const da = a.endDate ?? a.startDate;
+    const db = b.endDate ?? b.startDate;
+    return da.getTime() - db.getTime();
+  });
+  past.sort((a, b) => {
+    const da = a.endDate ?? a.startDate;
+    const db = b.endDate ?? b.startDate;
+    return db.getTime() - da.getTime();
+  });
+  return { upcomingEvents: upcoming, pastEvents: past };
+}
+
 /** Non-WelB events whose date (end ?? start) falls within the next 7 days. */
 export async function getHighlightEvents(): Promise<EventModel[]> {
   const supabase = createServerClient();
@@ -78,9 +106,7 @@ export async function getHighlightEvents(): Promise<EventModel[]> {
   });
 }
 
-export async function createEvent(
-  data: CreateEvent,
-): Promise<{ success: boolean; error?: string }> {
+export async function createEvent(data: CreateEvent): Promise<SubmitResult> {
   try {
     const supabase = createServerClient();
     const { error } = await supabase.from("events").insert({
@@ -112,10 +138,45 @@ export async function createEvent(
   }
 }
 
+/** For home page: create event via POST /api/create-event (uses SCRAPER_API_KEY server-side). */
+export async function createEventViaApi(
+  data: CreateEvent,
+): Promise<SubmitResult> {
+  try {
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      "http://localhost:3000";
+    const apiKey = process.env.SCRAPER_API_KEY;
+    if (!apiKey) return { success: false, error: "API not configured" };
+    const res = await fetch(`${base}/api/create-event`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: json.error ?? res.statusText };
+    }
+    if (json.success) {
+      revalidatePath("/admin/events");
+      revalidatePath("/events");
+      revalidatePath("/welb");
+    }
+    return { success: !!json.success, error: json.error };
+  } catch (error) {
+    console.error("Error creating event via API:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
 export async function updateEvent(
   id: string,
   data: Partial<Omit<EventModel, "id">>,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<SubmitResult> {
   try {
     const supabase = createServerClient();
     const update: Record<string, unknown> = {};
