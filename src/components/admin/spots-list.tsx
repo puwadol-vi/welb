@@ -7,14 +7,23 @@ import {
   useEffect,
   useMemo,
 } from "react";
-import { SpotModel } from "@/types/spot";
+import { SpotModel } from "@/types";
 import provinces from "@/const/province.json";
 import districts from "@/const/district.json";
 import { subCategories } from "@/const/categories";
 import { regions } from "@/const/regions";
-import { getSpots, updateSpot, createSpot, type CreateSpotInput } from "@/actions/spot";
+import { getSpots, updateSpot, createSpot } from "@/actions/spot";
+import type { CreateSpot } from "@/types/spot";
 
-import { Check, X, ExternalLink, Search, Pencil, MapPin, Plus } from "lucide-react";
+import {
+  Check,
+  X,
+  ExternalLink,
+  Search,
+  Pencil,
+  MapPin,
+  Plus,
+} from "lucide-react";
 
 export function AdminSpotsList() {
   const [spots, setSpots] = useState<SpotModel[]>([]);
@@ -43,14 +52,23 @@ export function AdminSpotsList() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<SpotModel>>({});
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateSpotInput>({
+  const [createForm, setCreateForm] = useState<CreateSpot>({
     name: "",
     description: "",
     type: "shop",
     category: "",
     region: "",
     province: "",
+    provinceTh: null,
+    district: null,
+    districtTh: null,
+    address: null,
+    lat: null,
+    lng: null,
     googleMapLink: "",
+    phone: null,
+    facebookLink: null,
+    websiteLink: null,
   });
 
   const uniqueProvinces = useMemo(
@@ -110,9 +128,14 @@ export function AdminSpotsList() {
     });
   };
 
-  const handleToggleLocalVerified = async (id: number, currentLocalVerified: boolean) => {
+  const handleToggleLocalVerified = async (
+    id: number,
+    currentLocalVerified: boolean,
+  ) => {
     startTransition(async () => {
-      const result = await updateSpot(id, { isLocalVerified: !currentLocalVerified });
+      const result = await updateSpot(id, {
+        isLocalVerified: !currentLocalVerified,
+      });
       if (result.success) await fetchSpots();
     });
   };
@@ -141,7 +164,9 @@ export function AdminSpotsList() {
       !createForm.province ||
       !createForm.googleMapLink
     ) {
-      alert("Please fill name, description, type, category, region, province, and map link.");
+      alert(
+        "Please fill name, description, type, category, region, province, and map link.",
+      );
       return;
     }
     startTransition(async () => {
@@ -155,7 +180,16 @@ export function AdminSpotsList() {
           category: "",
           region: "",
           province: "",
+          provinceTh: null,
+          district: null,
+          districtTh: null,
+          address: null,
+          lat: null,
+          lng: null,
           googleMapLink: "",
+          phone: null,
+          facebookLink: null,
+          websiteLink: null,
         });
         await fetchSpots();
       } else {
@@ -580,9 +614,14 @@ export function AdminSpotsList() {
                     {isEditing ? (
                       <input
                         type="text"
-                        value={[editData.lat ?? "", editData.lng ?? ""].join(", ").replace(/,\s*$/, "")}
+                        value={[editData.lat ?? "", editData.lng ?? ""]
+                          .join(", ")
+                          .replace(/,\s*$/, "")}
                         onChange={(e) => {
-                          const parts = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
+                          const parts = e.target.value
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean);
                           setEditData({
                             ...editData,
                             lat: parts[0] || null,
@@ -788,7 +827,6 @@ export function AdminSpotsList() {
                     </button>
                   </td>
 
-
                   {/* Local Verified (toggle) */}
                   <td className="px-3 py-2 text-center whitespace-nowrap">
                     <button
@@ -888,11 +926,16 @@ export function AdminSpotsList() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium">Description *</label>
+                <label className="mb-1 block text-xs font-medium">
+                  Description *
+                </label>
                 <textarea
                   value={createForm.description}
                   onChange={(e) =>
-                    setCreateForm({ ...createForm, description: e.target.value })
+                    setCreateForm({
+                      ...createForm,
+                      description: e.target.value,
+                    })
                   }
                   className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
                   rows={2}
@@ -901,7 +944,9 @@ export function AdminSpotsList() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium">Type *</label>
+                  <label className="mb-1 block text-xs font-medium">
+                    Type *
+                  </label>
                   <select
                     value={createForm.type}
                     onChange={(e) =>
@@ -915,7 +960,9 @@ export function AdminSpotsList() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium">Category *</label>
+                  <label className="mb-1 block text-xs font-medium">
+                    Category *
+                  </label>
                   <select
                     value={createForm.category}
                     onChange={(e) =>
@@ -937,7 +984,9 @@ export function AdminSpotsList() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium">Region *</label>
+                  <label className="mb-1 block text-xs font-medium">
+                    Region *
+                  </label>
                   <select
                     value={createForm.region}
                     onChange={(e) =>
@@ -953,7 +1002,9 @@ export function AdminSpotsList() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium">Province *</label>
+                  <label className="mb-1 block text-xs font-medium">
+                    Province *
+                  </label>
                   <select
                     value={createForm.province}
                     onChange={(e) =>
@@ -970,19 +1021,26 @@ export function AdminSpotsList() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium">Google Map link *</label>
+                <label className="mb-1 block text-xs font-medium">
+                  Google Map link *
+                </label>
                 <input
                   type="url"
                   value={createForm.googleMapLink}
                   onChange={(e) =>
-                    setCreateForm({ ...createForm, googleMapLink: e.target.value })
+                    setCreateForm({
+                      ...createForm,
+                      googleMapLink: e.target.value,
+                    })
                   }
                   className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
                   placeholder="https://maps.google.com/..."
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium">Address</label>
+                <label className="mb-1 block text-xs font-medium">
+                  Address
+                </label>
                 <input
                   type="text"
                   value={createForm.address ?? ""}

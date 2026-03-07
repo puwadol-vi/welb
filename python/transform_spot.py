@@ -234,7 +234,7 @@ def reverse_geocode_th(lat: float, lng: float) -> dict:
 
 def upload_spot(spot: dict) -> dict:
     """Upload transformed spot to the API."""
-    url = f"{API_BASE_URL}/api/update-spot"
+    url = f"{API_BASE_URL}/api/create-spot"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {API_KEY}",

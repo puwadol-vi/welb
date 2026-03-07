@@ -1,4 +1,4 @@
-import { digitalContent } from "@/lib/mock-data";
+import { digitalContent } from "@/lib";
 import {
   Video,
   BookOpen,

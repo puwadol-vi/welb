@@ -1,8 +1,8 @@
 "use server";
 
-import { createServerClient, mapRowToSpot, type SpotRow } from "@/lib/supabase";
+import { createServerClient } from "@/lib";
 import { revalidatePath } from "next/cache";
-import type { SpotModel } from "@/types/spot";
+import { mapRowToSpot, SpotRow, SpotModel, CreateSpot } from "@/types";
 
 function mapRows(rows: SpotRow[] | null): SpotModel[] {
   if (!rows) return [];
@@ -19,6 +19,7 @@ export async function getSpots(): Promise<SpotModel[]> {
   return mapRows(data);
 }
 
+// for spots page
 export async function getActiveSpots(): Promise<SpotModel[]> {
   const supabase = createServerClient();
   const { data, error } = await supabase
@@ -30,6 +31,7 @@ export async function getActiveSpots(): Promise<SpotModel[]> {
   return mapRows(data);
 }
 
+// for home page
 export async function getSuggestSpots(): Promise<SpotModel[]> {
   const supabase = createServerClient();
   const { data, error } = await supabase
@@ -42,27 +44,21 @@ export async function getSuggestSpots(): Promise<SpotModel[]> {
   return mapRows(data);
 }
 
-export type CreateSpotInput = {
-  name: string;
-  description: string;
-  type: string;
-  category: string;
-  region: string;
-  province: string;
-  googleMapLink: string;
-  provinceTh?: string | null;
-  district?: string | null;
-  districtTh?: string | null;
-  address?: string | null;
-  lat?: string | null;
-  lng?: string | null;
-  phone?: string | null;
-  facebookLink?: string | null;
-  websiteLink?: string | null;
-};
+// for event page
+export async function getEventSpots(): Promise<SpotModel[]> {
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("spots")
+    .select("*")
+    .eq("is_active", true)
+    .eq("type", "event")
+    .order("id", { ascending: true });
+  if (error) throw error;
+  return mapRows(data);
+}
 
 export async function createSpot(
-  data: CreateSpotInput,
+  data: CreateSpot,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createServerClient();
@@ -104,7 +100,9 @@ export async function updateSpot(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createServerClient();
-    const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const update: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
     if (data.name != null) update.name = data.name;
     if (data.description != null) update.description = data.description;
     if (data.type != null) update.type = data.type;
@@ -123,7 +121,8 @@ export async function updateSpot(
     if (data.websiteLink != null) update.website_link = data.websiteLink;
     if (data.isSuggested != null) update.is_suggested = data.isSuggested;
     if (data.isVerified != null) update.is_verified = data.isVerified;
-    if (data.isLocalVerified != null) update.is_local_verified = data.isLocalVerified;
+    if (data.isLocalVerified != null)
+      update.is_local_verified = data.isLocalVerified;
     if (data.isActive != null) update.is_active = data.isActive;
 
     const { error } = await supabase.from("spots").update(update).eq("id", id);

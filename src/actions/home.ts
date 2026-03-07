@@ -1,18 +1,21 @@
-import type { SpotModel, Event } from "@/types";
+import type { SpotModel, EventModel } from "@/types";
 import { getActiveSpots, getSuggestSpots } from "./spot";
+import { getHighlightEvents, getWelbEvents } from "./event";
 
 export interface HomePageData {
   stats: {
     shopCount: number;
     provinceCount: number;
   };
-  upcomingEvents: Event[];
+  highlightEvents: EventModel[];
+  welbEvents: EventModel[];
   topSpots: SpotModel[];
 }
 
 const emptyData: HomePageData = {
   stats: { shopCount: 0, provinceCount: 0 },
-  upcomingEvents: [],
+  welbEvents: [],
+  highlightEvents: [],
   topSpots: [],
 };
 
@@ -22,9 +25,13 @@ export async function getHomePageData(): Promise<HomePageData> {
     const activeSpots = await getActiveSpots();
     const shopCount = activeSpots.length;
     const provinces = new Set(activeSpots.map((s) => s.province));
+    const welbEvents = await getWelbEvents();
+    const highlightEvents = await getHighlightEvents();
+
     return {
       stats: { shopCount, provinceCount: provinces.size },
-      upcomingEvents: [],
+      welbEvents: welbEvents.upcomingEvents,
+      highlightEvents: highlightEvents,
       topSpots,
     };
   } catch {

@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { cn } from "@/lib/utils";
-import type { SpotModel } from "@/types/spot";
+import { cn } from "@/lib";
+import type { SpotModel } from "@/types";
 
 const ShopsMap = dynamic(
   () => import("@/components/spot/shops-map").then((m) => m.ShopsMap),

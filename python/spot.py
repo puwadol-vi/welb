@@ -379,7 +379,7 @@ def row_to_spot(row: dict) -> Optional[SpotData]:
 
 def upload_spot(spot: SpotData) -> dict:
     """Upload spot to API"""
-    url = f"{API_BASE_URL}/api/update-spot"
+    url = f"{API_BASE_URL}/api/create-spot"
     
     payload = {
         "name": spot.name,

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { onlineProducts } from "@/lib/mock-data";
+import { onlineProducts, cn } from "@/lib";
 import { ShoppingBag, MessageSquare, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const categoryFilters = [
   "All",

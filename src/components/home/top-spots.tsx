@@ -1,4 +1,4 @@
-import type { SpotModel } from "@/types/spot";
+import type { SpotModel } from "@/types";
 import { ExternalLink } from "lucide-react";
 
 interface TopBitcoinSpotsProps {

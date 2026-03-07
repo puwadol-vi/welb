@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MapPin, Plus } from "lucide-react";
 import { getHomePageData } from "@/actions/home";
-import { EventHighlightsSlider } from "@/components/home/event-highlights";
+import { EventSlider } from "@/components/home/event-highlights";
 import { TopBitcoinSpots } from "@/components/home/top-spots";
 
 // ISR: Revalidate every 60 seconds
@@ -100,14 +100,14 @@ export default async function HomePage() {
       </section>
 
       {/* Content sections */}
-      <div className="flex flex-col gap-6 px-4 py-6">
-        {/* Weekly Event Highlights */}
-        {/* <section>
+      <div className="flex flex-col gap-6 px-4 py-1">
+        {/* WelB Events Highlights */}
+        <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Weekly Event Highlights
+            WelB Events Highlights
           </h2>
-          <EventHighlightsSlider events={data.upcomingEvents} />
-        </section> */}
+          <EventSlider events={data.welbEvents} href="/welb" />
+        </section>
 
         {/* Top Bitcoin Spots */}
         <section>
@@ -115,6 +115,13 @@ export default async function HomePage() {
             Top Bitcoin Spots
           </h2>
           <TopBitcoinSpots spots={data.topSpots} />
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Weekly Event Highlights
+          </h2>
+          <EventSlider events={data.highlightEvents} href="/events" />
         </section>
       </div>
     </div>

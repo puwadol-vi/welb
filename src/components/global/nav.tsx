@@ -4,10 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Home, MapPin, ShoppingBag, Calendar, Layers } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib";
 
 const tabs = [
   { href: "/", label: "Home", icon: Home },
+  // { href: "/welb", label: "WelB", icon: Sparkles },
   { href: "/spots", label: "Spots", icon: MapPin },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/shops", label: "Shop", icon: ShoppingBag },

@@ -1,12 +1,12 @@
 export interface OnlineProduct {
-  id: string
-  title: string
-  category: string
-  price: number
-  currency: string
-  sellerName: string
-  contactUrl: string
-  imageUrl: string
+  id: string;
+  title: string;
+  category: string;
+  price: number;
+  currency: string;
+  sellerName: string;
+  contactUrl: string;
+  imageUrl: string;
 }
 
 export type OnlineProductCategory =
@@ -15,4 +15,4 @@ export type OnlineProductCategory =
   | "Stickers"
   | "Security"
   | "Books"
-  | "Art"
+  | "Art";

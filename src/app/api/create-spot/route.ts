@@ -1,27 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase";
+import { createServerClient } from "@/lib";
+import type { CreateSpot } from "@/types/spot";
 
 const API_KEY = process.env.SCRAPER_API_KEY;
-
-interface SpotPayload {
-  name: string;
-  description: string;
-  type: string;
-  category: string;
-  region: string;
-  province: string;
-  googleMapLink: string;
-  provinceTh?: string;
-  district?: string;
-  districtTh?: string;
-  address?: string;
-  lat?: number;
-  lng?: number;
-  phone?: string;
-  facebookLink?: string;
-  websiteLink?: string;
-  id?: number;
-}
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -33,9 +14,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const payload = body as SpotPayload;
+    const payload = body as CreateSpot;
 
-    const requiredFields = [
+    const requiredFields: (keyof CreateSpot)[] = [
       "name",
       "description",
       "type",
@@ -45,7 +26,11 @@ export async function POST(request: NextRequest) {
       "googleMapLink",
     ];
     for (const field of requiredFields) {
-      if (!payload[field as keyof SpotPayload]) {
+      if (
+        payload[field] === undefined ||
+        payload[field] === null ||
+        payload[field] === ""
+      ) {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
           { status: 400 },
@@ -67,8 +52,8 @@ export async function POST(request: NextRequest) {
         district: payload.district ?? null,
         district_th: payload.districtTh ?? null,
         address: payload.address ?? null,
-        lat: payload.lat?.toString() ?? null,
-        lng: payload.lng?.toString() ?? null,
+        lat: payload.lat ?? null,
+        lng: payload.lng ?? null,
         google_map_link: payload.googleMapLink,
         phone: payload.phone ?? null,
         facebook_link: payload.facebookLink ?? null,

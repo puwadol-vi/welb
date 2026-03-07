@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { SpotModel } from "@/types/spot";
+import type { SpotModel } from "@/types";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
@@ -96,7 +96,8 @@ export function ShopsMap({ spots }: ShopsMapProps) {
       const lng = spot.lng ? parseFloat(spot.lng) : 0;
       if (!lat || !lng) return;
 
-      const navigateUrl = spot.googleMapLink || `https://www.google.com/maps?q=${lat},${lng}`;
+      const navigateUrl =
+        spot.googleMapLink || `https://www.google.com/maps?q=${lat},${lng}`;
 
       const categoryIcon = L.divIcon({
         className: "category-marker",
