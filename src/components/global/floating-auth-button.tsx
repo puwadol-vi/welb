@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { LogIn, LogOut, Calendar, MapPin } from "lucide-react";
+import { LogIn, LogOut, Calendar, MapPin, Book } from "lucide-react";
 import type { User } from "firebase/auth";
 
 export type FloatingAuthButtonProps = {
@@ -85,6 +85,14 @@ export function FloatingAuthButton({
               >
                 <MapPin className="h-4 w-4" />
                 Spot Admin Page
+              </Link>
+              <Link
+                href="/docs"
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <Book className="h-4 w-4" />
+                API Docs
               </Link>
             </div>
           )}
