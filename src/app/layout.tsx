@@ -1,33 +1,37 @@
-import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
-import { AuthProvider } from '@/components/auth/auth-provider'
-import { Nav } from '@/components/global/nav'
-import './globals.css'
+import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { Nav } from "@/components/global/nav";
+import "./globals.css";
 
-const _inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
-const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" })
+const _inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const _jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+});
 
 export const metadata: Metadata = {
-  title: 'WelB - Bitcoin Ecosystem Hub',
-  description: 'Discover Bitcoin shops, events, and digital content in your community. Your gateway to the Bitcoin circular economy.',
+  title: "WelB - Bitcoin Ecosystem Hub",
+  description:
+    "Discover Bitcoin shops, events, and digital content in your community. Your gateway to the Bitcoin circular economy.",
   icons: {
-    icon: '/logo.jpg',
-    apple: '/logo.jpg',
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
   },
-}
+};
 
 export const viewport: Viewport = {
-  themeColor: '#1a1a2e',
-  width: 'device-width',
+  themeColor: "#1a1a2e",
+  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -40,5 +44,5 @@ export default function RootLayout({
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

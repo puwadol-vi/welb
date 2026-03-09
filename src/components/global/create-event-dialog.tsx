@@ -15,8 +15,8 @@ export type CreateEventDialogProps = {
 };
 
 function getDefaultForm(organizer: string): CreateEvent {
-  const orgList = organizer === "admin" ? organizers_list :[organizer]
-  
+  const orgList = organizer === "admin" ? organizers_list : [organizer];
+
   const firstOrg = orgList[0] ?? "";
   return {
     title: "",
@@ -48,7 +48,8 @@ export function CreateEventDialog({
   );
   const [isPending, setIsPending] = useState(false);
 
-  const organizerOptions = organizer === "admin" ? organizers_list :[organizer]
+  const organizerOptions =
+    organizer === "admin" ? organizers_list : [organizer];
 
   useEffect(() => {
     if (open) {

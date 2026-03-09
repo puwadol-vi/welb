@@ -9,7 +9,9 @@ import { notFound } from "next/navigation";
 
 export function AdminEventsPageClient() {
   const { user, loading: authLoading } = useAuth();
-  const [organizerAccess, setOrganizerAccess] = useState<string  | "loading">("loading");
+  const [organizerAccess, setOrganizerAccess] = useState<string | "loading">(
+    "loading",
+  );
 
   useEffect(() => {
     if (!user) {

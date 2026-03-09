@@ -90,6 +90,7 @@ export function FloatingCreateButton({
         onClose={() => setEventDialogOpen(false)}
         onSuccess={() => setEventDialogOpen(false)}
         onSubmit={onSubmitEvent}
+        organizer={"admin"}
       />
       <CreateSpotDialog
         open={spotDialogOpen}

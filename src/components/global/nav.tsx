@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  MapPin,
-  ShoppingBag,
-  Calendar,
-  Layers,
-} from "lucide-react";
+import { Home, MapPin, ShoppingBag, Calendar, Layers } from "lucide-react";
 import { cn } from "@/lib";
 import { useAuth } from "@/components/auth/auth-provider";
 import { getAppUser } from "@/actions/user";

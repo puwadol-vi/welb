@@ -3,9 +3,7 @@
 import { useState, useTransition, useCallback, useEffect } from "react";
 import { getEvents, updateEvent, createEvent } from "@/actions/event";
 import { getEventSpots } from "@/actions/spot";
-import {
-  CreateEventDialog,
-} from "@/components/global/create-event-dialog";
+import { CreateEventDialog } from "@/components/global/create-event-dialog";
 import { DateTimePicker } from "@/components/global/date-time-picker";
 import { organizers_list } from "@/const/event";
 import { SpotModel, EventModel, EVENT_TYPES } from "@/types";
@@ -51,11 +49,15 @@ export function AdminEventsList({
   }, []);
 
   const now = new Date();
-  const orgList = organizerAccess === "admin" ? organizers_list :[organizerAccess]
+  const orgList =
+    organizerAccess === "admin" ? organizers_list : [organizerAccess];
 
   const filteredEvents = events
     .filter((ev) => {
-      const matchesOrganizer = organizerAccess === "admin" ? true : ev.organizerName === organizerAccess;
+      const matchesOrganizer =
+        organizerAccess === "admin"
+          ? true
+          : ev.organizerName === organizerAccess;
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -642,9 +644,7 @@ export function AdminEventsList({
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => fetchEvents()}
         onSubmit={createEvent}
-        organizer={
-          organizerAccess
-        }
+        organizer={organizerAccess}
       />
     </div>
   );

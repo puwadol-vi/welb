@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, type FirebaseAuth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,9 +10,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let auth: FirebaseAuth | null = null;
+let auth: ReturnType<typeof getAuth> | null = null;
 
-function getFirebaseAuth(): FirebaseAuth | null {
+function getFirebaseAuth(): ReturnType<typeof getAuth> | null {
   if (typeof window === "undefined") return null;
   if (auth) return auth;
   const hasConfig =
