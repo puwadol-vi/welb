@@ -3,8 +3,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, ShoppingBag, Calendar, Layers } from "lucide-react";
+import {
+  Home,
+  MapPin,
+  ShoppingBag,
+  Calendar,
+  Layers,
+} from "lucide-react";
 import { cn } from "@/lib";
+import { useAuth } from "@/components/auth/auth-provider";
+import { FloatingAuthButton } from "./floating-auth-button";
 
 const tabs = [
   { href: "/", label: "Home", icon: Home },
@@ -17,9 +25,21 @@ const tabs = [
 
 export function Nav() {
   const pathname = usePathname();
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
+
+  const isHome = pathname === "/";
 
   return (
     <>
+      {!loading && isHome && (
+        <div className="fixed top-4 right-4 z-60 flex items-center gap-2 sm:hidden">
+          <FloatingAuthButton
+            user={user}
+            onSignIn={signInWithGoogle}
+            onSignOut={signOut}
+          />
+        </div>
+      )}
       {/* Top nav for sm and above */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 hidden border-b border-border bg-card/95 backdrop-blur-md sm:block"
@@ -62,6 +82,13 @@ export function Nav() {
                 </Link>
               );
             })}
+            {!loading && (
+              <FloatingAuthButton
+                user={user}
+                onSignIn={signInWithGoogle}
+                onSignOut={signOut}
+              />
+            )}
           </div>
         </div>
       </nav>

@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
     "clsx": "^2.1.1",
+    "firebase": "^12.10.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.564.0",
@@ -22,13 +23,13 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.17.1",
-    "esbuild": "^0.24.0",
     "@tailwindcss/postcss": "^4.2.0",
     "@types/leaflet": "^1.9.8",
     "@types/leaflet.markercluster": "^1.5.4",
     "@types/node": "^22",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "esbuild": "^0.24.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.2.0",
     "tw-animate-css": "1.3.3",

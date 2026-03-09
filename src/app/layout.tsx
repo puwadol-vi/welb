@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
+import { AuthProvider } from '@/components/auth/auth-provider'
 import { Nav } from '@/components/global/nav'
 import './globals.css'
 
@@ -31,10 +32,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <main className="min-h-screen pb-20 sm:pb-0 sm:pt-16">
-          {children}
-        </main>
-        <Nav />
+        <AuthProvider>
+          <main className="min-h-screen pb-20 sm:pb-0 sm:pt-16">
+            {children}
+          </main>
+          <Nav />
+        </AuthProvider>
       </body>
     </html>
   )
