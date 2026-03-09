@@ -1,45 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DateTimePickerString } from "@/components/global/date-time-picker";
-import { currency as currencyOptions, organizer } from "@/const/event";
+import { currency as currencyOptions, organizers_list } from "@/const/event";
 import { EVENT_TYPES, type CreateEvent } from "@/types/event";
 import { SubmitResult } from "@/types";
 
-type Props = {
+export type CreateEventDialogProps = {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
   onSubmit: (data: CreateEvent) => Promise<SubmitResult>;
+  organizer: string;
 };
 
-const defaultForm: CreateEvent = {
-  title: "",
-  description: null,
-  type: "meetup",
-  price: null,
-  currency: null,
-  startDate: new Date().toISOString().slice(0, 16),
-  endDate: null,
-  location: "",
-  organizerName: organizer[0] ?? "",
-  imageUrl: null,
-  eventUrl: null,
-  registrationUrl: null,
-  isWelBProject: false,
-  isMarket: false,
-};
+function getDefaultForm(organizer: string): CreateEvent {
+  const orgList = organizer === "admin" ? organizers_list :[organizer]
+  
+  const firstOrg = orgList[0] ?? "";
+  return {
+    title: "",
+    description: null,
+    type: "meetup",
+    price: null,
+    currency: null,
+    startDate: new Date().toISOString().slice(0, 16),
+    endDate: null,
+    location: "",
+    organizerName: firstOrg,
+    imageUrl: null,
+    eventUrl: null,
+    registrationUrl: null,
+    isWelBProject: false,
+    isMarket: false,
+  };
+}
 
 export function CreateEventDialog({
   open,
   onClose,
   onSuccess,
   onSubmit,
-}: Props) {
-  const [form, setForm] = useState<CreateEvent>(defaultForm);
+  organizer,
+}: CreateEventDialogProps) {
+  const [form, setForm] = useState<CreateEvent>(() =>
+    getDefaultForm(organizer),
+  );
   const [isPending, setIsPending] = useState(false);
 
+  const organizerOptions = organizer === "admin" ? organizers_list :[organizer]
+
+  useEffect(() => {
+    if (open) {
+      setForm(getDefaultForm(organizer));
+    }
+  }, [open, organizer]);
+
   if (!open) return null;
+
+  const defaultForm = getDefaultForm(organizer);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +81,7 @@ export function CreateEventDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4"
       onClick={onClose}
     >
       <div
@@ -186,7 +205,7 @@ export function CreateEventDialog({
               }
               className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
             >
-              {organizer.map((o) => (
+              {organizerOptions.map((o) => (
                 <option key={o} value={o}>
                   {o}
                 </option>

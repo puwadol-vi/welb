@@ -3,9 +3,11 @@
 import { useState, useTransition, useCallback, useEffect } from "react";
 import { getEvents, updateEvent, createEvent } from "@/actions/event";
 import { getEventSpots } from "@/actions/spot";
-import { CreateEventDialog } from "@/components/global/create-event-dialog";
+import {
+  CreateEventDialog,
+} from "@/components/global/create-event-dialog";
 import { DateTimePicker } from "@/components/global/date-time-picker";
-import { organizer } from "@/const/event";
+import { organizers_list } from "@/const/event";
 import { SpotModel, EventModel, EVENT_TYPES } from "@/types";
 import { Check, X, Search, Pencil, Plus, ExternalLink } from "lucide-react";
 
@@ -14,11 +16,15 @@ function eventDate(ev: EventModel): Date {
   return typeof raw === "string" ? new Date(raw) : raw;
 }
 
-export function AdminEventsList() {
+export function AdminEventsList({
+  organizerAccess = "",
+}: {
+  organizerAccess: string;
+}) {
   const [events, setEvents] = useState<EventModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [welbOnly, setWelbOnly] = useState(true);
+  const [welbOnly, setWelbOnly] = useState(organizerAccess === "admin");
   const [timeFilter, setTimeFilter] = useState<"upcoming" | "past">("upcoming");
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,8 +51,11 @@ export function AdminEventsList() {
   }, []);
 
   const now = new Date();
+  const orgList = organizerAccess === "admin" ? organizers_list :[organizerAccess]
+
   const filteredEvents = events
     .filter((ev) => {
+      const matchesOrganizer = organizerAccess === "admin" ? true : ev.organizerName === organizerAccess;
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -57,7 +66,7 @@ export function AdminEventsList() {
       const date = eventDate(ev);
       const isUpcoming = date >= now;
       const matchesTime = timeFilter === "upcoming" ? isUpcoming : !isUpcoming;
-      return matchesSearch && matchesWelb && matchesTime;
+      return matchesSearch && matchesWelb && matchesTime && matchesOrganizer;
     })
     .sort((a, b) => {
       const da = eventDate(a).getTime();
@@ -411,7 +420,7 @@ export function AdminEventsList() {
                         }
                         className="w-28 rounded border border-border bg-background px-2 py-1 text-xs"
                       >
-                        {organizer.map((o) => (
+                        {orgList.map((o) => (
                           <option key={o} value={o}>
                             {o}
                           </option>
@@ -633,6 +642,9 @@ export function AdminEventsList() {
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => fetchEvents()}
         onSubmit={createEvent}
+        organizer={
+          organizerAccess
+        }
       />
     </div>
   );
