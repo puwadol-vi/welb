@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "deploy": "npx opennextjs-cloudflare build && npx opennextjs-cloudflare deploy"
+    "b": "npx opennextjs-cloudflare build",
+    "p": "npx opennextjs-cloudflare preview",
+    "d": "npx opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
