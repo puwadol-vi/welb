@@ -49,7 +49,7 @@ export interface CreateEvent {
   imageUrl: string | null;
   eventUrl: string | null;
   registrationUrl: string | null;
-  // participantCount: number | null
+  participantCount: number | null;
   isWelBProject: boolean;
   isMarket: boolean;
 }

@@ -64,7 +64,15 @@ export async function getEventsForPage(): Promise<{
   upcomingEvents: EventModel[];
   pastEvents: EventModel[];
 }> {
-  const all = await getEvents();
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("is_active", true)
+    .eq("is_verified", true)
+    .order("start_date", { ascending: false });
+  if (error) throw error;
+  const all = mapRows(data);
   const now = new Date();
   const upcoming: EventModel[] = [];
   const past: EventModel[] = [];
@@ -149,7 +157,7 @@ export async function createEventViaApi(
       "http://localhost:3000";
     const apiKey = process.env.SCRAPER_API_KEY;
     if (!apiKey) return { success: false, error: "API not configured" };
-    const res = await fetch(`${base}/api/create-event`, {
+    const res = await fetch(`${base}/api/event/create-event`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create a single event via /api/create-event.
+Create a single event via /api/event/create-event.
 
 Usage:
   python scripts/create_event.py <path-to-event.json>
@@ -85,7 +85,7 @@ def main():
 
     payload = json.dumps(body, ensure_ascii=False).encode()
     req = urllib.request.Request(
-        f"{api_base}/api/create-event",
+        f"{api_base}/api/event/create-event",
         data=payload,
         headers={
             "Content-Type": "application/json",

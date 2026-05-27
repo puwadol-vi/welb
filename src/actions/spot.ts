@@ -110,7 +110,7 @@ export async function createSpotViaApi(
       "http://localhost:3000";
     const apiKey = process.env.SCRAPER_API_KEY;
     if (!apiKey) return { success: false, error: "API not configured" };
-    const res = await fetch(`${base}/api/create-spot`, {
+    const res = await fetch(`${base}/api/spot/create-spot`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

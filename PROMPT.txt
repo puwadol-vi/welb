@@ -1,0 +1,29 @@
+❯ i already ai event create flow
+ai/.claude/commands/scrape.md
+
+i want more api
+after create api => create docs (docs/event-api)
+
+API: GET /api/events?title&startDate
+Purpose: Duplicate check against real DB
+Priority: High
+────────────────────────────────────────
+API: PATCH /api/events/:id
+Purpose: Update event with new info
+Priority: High
+────────────────────────────────────────
+API: GET /api/spots?search
+Purpose: Link event to existing spot
+Priority: Medium
+────────────────────────────────────────
+API: POST /api/upload-image
+Purpose: Permanent image URL
+Priority: Medium
+────────────────────────────────────────
+API: GET /api/events/:id
+Purpose: Verify created event
+Priority: Low 
+
+
+make background to be dark green (tell me display logic 
+ after implement) 

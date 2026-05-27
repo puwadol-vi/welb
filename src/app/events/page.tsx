@@ -1,6 +1,6 @@
 import { getEventsForPage } from "@/actions/event";
 import { getEventSpots } from "@/actions/spot";
-import { EventsPageContent } from "@/components/events/events-page-content";
+import { EventsGridContent } from "@/components/events/events-grid-content";
 
 export default async function EventsPage() {
   const [eventData, spots] = await Promise.all([
@@ -12,7 +12,7 @@ export default async function EventsPage() {
   ) as Record<number, string>;
 
   return (
-    <EventsPageContent
+    <EventsGridContent
       upcomingEvents={eventData.upcomingEvents}
       pastEvents={eventData.pastEvents}
       spotMap={spotMap}

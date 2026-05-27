@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Table, ExternalLink } from "lucide-react";
 import { cn } from "@/lib";
@@ -22,10 +23,13 @@ type ViewType = "map" | "table";
 
 interface SpotsListProps {
   initialSpots: SpotModel[];
+  initialView?: ViewType;
 }
 
-export function SpotsList({ initialSpots }: SpotsListProps) {
-  const [view, setView] = useState<ViewType>("map");
+export function SpotsList({ initialSpots, initialView = "map" }: SpotsListProps) {
+  const [view, setView] = useState<ViewType>(initialView);
+  const router = useRouter();
+  const pathname = usePathname();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeRegion, setActiveRegion] = useState<string>("all");
 
@@ -51,7 +55,13 @@ export function SpotsList({ initialSpots }: SpotsListProps) {
         </div>
         <button
           type="button"
-          onClick={() => setView(view === "table" ? "map" : "table")}
+          onClick={() => {
+            if (pathname === "/spots/table") {
+              router.push("/spots");
+            } else {
+              router.push("/spots/table");
+            }
+          }}
           className={cn(
             "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
             view === "table"

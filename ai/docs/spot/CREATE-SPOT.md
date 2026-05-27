@@ -1,4 +1,4 @@
-### GET /api/create-spot
+### GET /api/spot/create-spot
 
 Health check for the spot create API.
 
@@ -15,7 +15,7 @@ Health check for the spot create API.
 
 ---
 
-### POST /api/create-spot
+### POST /api/spot/create-spot
 
 Create a new spot (used by scraper). The created spot is inserted as unverified and inactive.
 

@@ -51,12 +51,12 @@ export async function POST(request: NextRequest) {
         image_url: payload.imageUrl ?? null,
         event_url: payload.eventUrl ?? null,
         registration_url: payload.registrationUrl ?? null,
-        participant_count: null,
+        participant_count: payload.participantCount ?? null,
         is_welb_project: payload.isWelBProject ?? false,
         is_market: payload.isMarket ?? false,
         is_suggested: false,
         is_verified: false,
-        is_active: false,
+        is_active: true,
       })
       .select()
       .single();
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       success: true,
       action: "created",
       event: newEvent,
-      message: "New event created (inactive)",
+      message: "New event created (pending verification)",
     });
   } catch (error) {
     console.error("Error creating event:", error);
@@ -76,18 +76,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const apiKey = authHeader?.replace("Bearer ", "");
-
-  if (!API_KEY || apiKey !== API_KEY) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return NextResponse.json({
-    status: "ok",
-    message: "Event create API is ready",
-  });
 }

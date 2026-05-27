@@ -48,3 +48,5 @@ __pycache__
 
 .open-next
 .wrangler
+
+supabase/.temp

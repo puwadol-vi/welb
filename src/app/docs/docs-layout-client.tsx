@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Calendar, MapPin, LayoutDashboard } from "lucide-react";
+import {
+  FileText,
+  MapPin,
+  LayoutDashboard,
+  Search,
+  Eye,
+  Pencil,
+  Upload,
+  PlusCircle,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "@/lib";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -27,71 +38,167 @@ export function MarkdownViewer({ content }: { content: string }) {
 }
 
 export type DocPartId =
-  | "top"
-  | "create-event"
-  | "create-spot"
-  | "implementation";
+  | "overview"
+  | "implementation"
+  | "createEvent"
+  | "getEvents"
+  | "getEvent"
+  | "patchEvent"
+  | "createSpot"
+  | "getSpots"
+  | "uploadImage";
 
-const SIDEBAR_ITEMS: {
+type SidebarItem = {
   id: DocPartId;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-}[] = [
-  { id: "top", label: "Overview", icon: FileText },
-  { id: "create-event", label: "Create Event", icon: Calendar },
-  { id: "create-spot", label: "Create Spot", icon: MapPin },
-  { id: "implementation", label: "Implementation Plan", icon: LayoutDashboard },
-];
-
-type Props = {
-  apiContent: string;
-  createEventContent: string;
-  createSpotContent: string;
-  implementationContent: string;
 };
 
-export function DocsLayoutClient({
-  apiContent,
-  createEventContent,
-  createSpotContent,
-  implementationContent,
-}: Props) {
-  const [selected, setSelected] = useState<DocPartId>("top");
+type SidebarGroup = {
+  group: string;
+  items: SidebarItem[];
+};
 
-  const contentMap = {
-    top: apiContent,
-    "create-event": createEventContent,
-    "create-spot": createSpotContent,
-    implementation: implementationContent,
-  };
+type SidebarSection = {
+  section: string;
+};
 
-  const content = contentMap[selected];
+const SIDEBAR: (SidebarItem | SidebarGroup | SidebarSection)[] = [
+  { id: "overview", label: "Overview", icon: FileText },
+  { id: "implementation", label: "Implementation Plan", icon: LayoutDashboard },
+  { section: "API" },
+  {
+    group: "Events",
+    items: [
+      { id: "createEvent", label: "Create Event", icon: PlusCircle },
+      { id: "getEvents", label: "List Events", icon: Search },
+      { id: "getEvent", label: "Get Event", icon: Eye },
+      { id: "patchEvent", label: "Update Event", icon: Pencil },
+    ],
+  },
+  {
+    group: "Spots",
+    items: [
+      { id: "createSpot", label: "Create Spot", icon: MapPin },
+      { id: "getSpots", label: "List Spots", icon: Search },
+    ],
+  },
+  { id: "uploadImage", label: "Upload Image", icon: Upload },
+];
+
+type Docs = Record<DocPartId, string>;
+
+function isGroup(entry: SidebarItem | SidebarGroup | SidebarSection): entry is SidebarGroup {
+  return "group" in entry;
+}
+
+function isSection(entry: SidebarItem | SidebarGroup | SidebarSection): entry is SidebarSection {
+  return "section" in entry;
+}
+
+function SidebarButton({
+  item,
+  selected,
+  onSelect,
+  indent = false,
+}: {
+  item: SidebarItem;
+  selected: DocPartId;
+  onSelect: (id: DocPartId) => void;
+  indent?: boolean;
+}) {
+  const Icon = item.icon;
+  return (
+    <button
+      key={item.id}
+      type="button"
+      onClick={() => onSelect(item.id)}
+      className={cn(
+        "flex w-full items-center gap-2 rounded-lg py-1.5 text-left text-sm font-medium transition-colors",
+        indent ? "pl-5 pr-3" : "px-3",
+        selected === item.id
+          ? "bg-primary/15 text-primary"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {item.label}
+    </button>
+  );
+}
+
+export function DocsLayoutClient({ docs }: { docs: Docs }) {
+  const [selected, setSelected] = useState<DocPartId>("overview");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  function toggleGroup(group: string) {
+    setCollapsed((prev) => ({ ...prev, [group]: !prev[group] }));
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="w-56 shrink-0 border-r border-border bg-card/30 p-4">
         <nav className="space-y-0.5" aria-label="Docs sections">
-          {SIDEBAR_ITEMS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setSelected(id)}
-              className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
-                selected === id
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </button>
-          ))}
+          {SIDEBAR.map((entry) => {
+            if (isSection(entry)) {
+              return (
+                <div key={entry.section} className="pt-5">
+                  <div className="mb-2 flex items-center gap-2 px-3">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/50">
+                      {entry.section}
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                </div>
+              );
+            }
+            if (isGroup(entry)) {
+              const isCollapsed = !!collapsed[entry.group];
+              return (
+                <div key={entry.group} className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(entry.group)}
+                    className="mb-0.5 flex w-full items-center gap-1 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 hover:text-muted-foreground"
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight className="h-3 w-3 shrink-0" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 shrink-0" />
+                    )}
+                    {entry.group}
+                  </button>
+                  {!isCollapsed && (
+                    <div className="space-y-0.5">
+                      {entry.items.map((item) => (
+                        <SidebarButton
+                          key={item.id}
+                          item={item}
+                          selected={selected}
+                          onSelect={setSelected}
+                          indent
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <SidebarButton
+                key={entry.id}
+                item={entry}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            );
+          })}
         </nav>
       </aside>
       <main className="min-w-0 flex-1 overflow-auto">
         <div className="mx-auto max-w-4xl px-6 py-10">
-          <MarkdownViewer content={content} />
+          <MarkdownViewer content={docs[selected]} />
         </div>
       </main>
     </div>
