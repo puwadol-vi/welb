@@ -15,6 +15,18 @@ Facebook pages to watch: `config/pages.json`.
 
 ---
 
+## Step 0: Check local server
+
+Run:
+```
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
+```
+
+If the result is NOT `200`, stop immediately and tell the user:
+> Local server is not running. Start it first, then re-run /scrape.
+
+---
+
 ## Step 1: Parse arguments
 
 Supported arguments:
@@ -102,8 +114,8 @@ If it IS an event, extract:
 - `price` — number only (e.g. 250), null if free or unknown
 - `currency` — "THB" if price in baht, null otherwise
 - `organizerName` — organizer or page name
-- `eventUrl` — URL to event page if explicitly in the post
-- `imageUrl` — first image URL from the post
+- `eventUrl` — always set to the Facebook **post URL** (`url` field from the post)
+- `imageUrl` — first URL from `imageUrls` array (`imageUrls[0]`), or null if none
 - `type` — one of: `meetup`, `market`, `concert`, `workshop`, `festival`, `exhibition`, `sports`, `other`
 - `isMarket` — true if it's a market/fair/bazaar
 - `isWelBProject` — true only if organized by WelB itself (almost always false)
@@ -146,6 +158,8 @@ For each detection where `isEvent: true` and not skipped by duplicate check:
      "scrapeDate": "YYYY-MM-DD",
      "title": "...",
      "startDate": "...",
+     "eventUrl": "<facebook post url>",
+     "imageUrl": "<imageUrls[0] from post, or null>",
      ...all other event fields...
    }
    ```
