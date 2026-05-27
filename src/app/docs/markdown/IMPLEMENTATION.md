@@ -18,6 +18,10 @@ event
 - [ ] if market event => create store regis dialog with store regis page
 - [ ] event spot have button redirect to google map
 
+osm
+
+- [ ] use spot data to create in open street map
+
 new page
 
 - [ ] online shop page

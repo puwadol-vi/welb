@@ -9,15 +9,6 @@ export default async function SpotsPage() {
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-6">
-      {/* Header */}
-      <header>
-        <h1 className="text-xl font-bold text-foreground">Spots</h1>
-        <p className="text-xs text-muted-foreground">
-          Thailand Bitcoin Physical Spaces
-        </p>
-      </header>
-
-      {/* Client component for interactive filters and list */}
       <SpotsList initialSpots={spots} />
     </div>
   );

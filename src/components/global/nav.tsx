@@ -1,53 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, ShoppingBag, Calendar, Layers } from "lucide-react";
+import {
+  Home,
+  MapPin,
+  ShoppingBag,
+  Calendar,
+  Layers,
+  Book,
+} from "lucide-react";
 import { cn } from "@/lib";
-import { useAuth } from "@/components/auth/auth-provider";
-import { getAppUser } from "@/actions/user";
-import { FloatingAuthButton } from "./floating-auth-button";
 
 const tabs = [
   { href: "/", label: "Home", icon: Home },
-  // { href: "/welb", label: "WelB", icon: Sparkles },
   { href: "/spots", label: "Spots", icon: MapPin },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/shops", label: "Shop", icon: ShoppingBag },
   { href: "/digital", label: "Digital", icon: Layers },
+  { href: "/docs", label: "", icon: Book },
 ];
 
 export function Nav() {
   const pathname = usePathname();
-  const { user, loading, signInWithGoogle, signOut } = useAuth();
-  const [organizer, setOrganizer] = useState("");
-
-  useEffect(() => {
-    if (!user) {
-      setOrganizer("");
-      return;
-    }
-    getAppUser(user.uid).then((appUser) => {
-      setOrganizer(appUser?.organizer ?? "");
-    });
-  }, [user]);
-
-  const isHome = pathname === "/";
 
   return (
     <>
-      {!loading && isHome && (
-        <div className="fixed top-4 right-4 z-60 flex items-center gap-2 sm:hidden">
-          <FloatingAuthButton
-            user={user}
-            onSignIn={signInWithGoogle}
-            onSignOut={signOut}
-            organizer={organizer}
-          />
-        </div>
-      )}
       {/* Top nav for sm and above */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 hidden border-b border-border bg-card/95 backdrop-blur-md sm:block"
@@ -90,14 +69,6 @@ export function Nav() {
                 </Link>
               );
             })}
-            {!loading && (
-              <FloatingAuthButton
-                user={user}
-                onSignIn={signInWithGoogle}
-                onSignOut={signOut}
-                organizer={organizer}
-              />
-            )}
           </div>
         </div>
       </nav>
