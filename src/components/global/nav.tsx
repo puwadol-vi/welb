@@ -17,7 +17,7 @@ const tabs = [
   { href: "/", label: "Home", icon: Home },
   { href: "/spots", label: "Spots", icon: MapPin },
   { href: "/events", label: "Events", icon: Calendar },
-  { href: "/shops", label: "Shop", icon: ShoppingBag },
+  { href: "/marketplace", label: "Marketplace", icon: ShoppingBag },
   { href: "/digital", label: "Digital", icon: Layers },
   { href: "/docs", label: "", icon: Book },
 ];
