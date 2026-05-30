@@ -90,7 +90,7 @@ export function mapRowToEvent(row: EventRow): EventModel {
     price: row.price != null ? Number(row.price) : null,
     currency: row.currency,
     startDate: row.start_date ? new Date(row.start_date) : new Date(0),
-    endDate: row.end_date ? new Date(row.end_date) : new Date(0),
+    endDate: row.end_date ? new Date(row.end_date) : null,
     location: row.location,
     organizerName: row.organizer_name,
     imageUrl: row.image_url,

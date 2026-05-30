@@ -246,7 +246,7 @@ def main():
 
     if not pages:
         cfg = json.loads((Path(__file__).parent.parent / "config" / "pages.json").read_text())
-        pages = cfg["pages"]
+        pages = [url for url in cfg.get("facebook", {}).values() if url]
 
     start_label = date or yesterday_bangkok()
     labels = [add_days(start_label, i) for i in range(days)]

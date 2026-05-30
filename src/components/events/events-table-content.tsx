@@ -22,6 +22,20 @@ function fmtDate(d: Date | string | null | undefined): string {
   });
 }
 
+function fmtDateTime(d: Date | string | null | undefined): string {
+  if (!d) return "-";
+  const date = d instanceof Date ? d : new Date(d);
+  if (isNaN(date.getTime())) return "-";
+  return date.toLocaleString("th-TH", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 type Preset = "lastCreated" | "pastNearest" | "futureNearest";
 
 const PRESETS: { id: Preset; label: string }[] = [
@@ -174,6 +188,7 @@ export function EventsTableContent({ events, spotMap }: Props) {
           <tbody>
             {rows.map((event) => {
               const isLive = event.isActive && event.isVerified;
+              const isPending = event.isActive && !event.isVerified;
               return (
                 <tr
                   key={event.id}
@@ -181,7 +196,9 @@ export function EventsTableContent({ events, spotMap }: Props) {
                     "border-b border-border transition-colors",
                     isLive
                       ? "bg-emerald-950 hover:bg-emerald-900/60"
-                      : "bg-background hover:bg-muted/30",
+                      : isPending
+                        ? "bg-yellow-900 hover:bg-yellow-900/60"
+                        : "bg-background hover:bg-muted/30",
                   )}
                 >
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
@@ -197,10 +214,10 @@ export function EventsTableContent({ events, spotMap }: Props) {
                     {event.type}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {fmtDate(event.startDate)}
+                    {fmtDateTime(event.startDate)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {fmtDate(event.endDate)}
+                    {fmtDateTime(event.endDate)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {event.location || "—"}
