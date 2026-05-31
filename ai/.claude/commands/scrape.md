@@ -145,9 +145,11 @@ Write your full analysis to `data/events/YYYY-MM-DD/detected.json`:
 
 ---
 
-## Step 8: Create events
+## Step 8: Create or soft-update events
 
 For each detection where `isEvent: true` and not skipped by duplicate check:
+
+### 8a: New event (no match in event-log)
 
 1. Write a JSON file to `data/events/YYYY-MM-DD/pending/<postId>.json` with the event fields **plus these extra fields** needed by the log:
    ```json
@@ -171,12 +173,36 @@ For each detection where `isEvent: true` and not skipped by duplicate check:
 
 3. Parse the JSON output. The script automatically appends to `data/logs/event-log.json` on success.
 
+### 8b: Soft update (same event, changed data or new image)
+
+If the post matches an existing event in `event-log.json` (same title + startDate) **but** has updated data or a different image, do a soft update instead of skipping:
+
+1. Upload the new image if changed:
+   ```
+   python3 scripts/upload_image.py <local image path>
+   ```
+
+2. Write a patch JSON file to `data/events/YYYY-MM-DD/pending/<postId>.json` with only the changed fields:
+   ```json
+   { "imageUrl": "...", "description": "..." }
+   ```
+
+3. Run:
+   ```
+   python3 scripts/update_event.py <old_eventId> data/events/YYYY-MM-DD/pending/<postId>.json
+   ```
+
+4. The script calls `PATCH /api/event/events/<old_eventId>` and prints the response. The API returns `{ "action": "soft-updated", "oldId": "...", "event": { "id": "<new_id>", "ref_id": "<old_id>", ... } }`.
+
+4. Record in `created.json` with `"action": "soft-updated"`.
+
 After all posts, write results to `data/events/YYYY-MM-DD/created.json`:
 ```json
 [
   { "postId": "...", "postUrl": "...", "success": true, "eventId": "...", "action": "created" },
+  { "postId": "...", "postUrl": "...", "success": true, "eventId": "<new_id>", "oldEventId": "<old_id>", "action": "soft-updated" },
   { "postId": "...", "postUrl": "...", "success": false, "error": "..." },
-  { "postId": "...", "postUrl": "...", "skipped": true, "skipReason": "duplicate: same title+date found in event-log" }
+  { "postId": "...", "postUrl": "...", "skipped": true, "skipReason": "duplicate: same title+date, no changes detected" }
 ]
 ```
 

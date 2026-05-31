@@ -9,12 +9,79 @@ Output (JSON):
   {"url": "https://..."}
 """
 
+import io
 import json
 import mimetypes
 import os
+import subprocess
 import sys
+import tempfile
 import urllib.request
 from pathlib import Path
+
+MAX_UPLOAD_BYTES = 100_000  # 100 KB
+
+_IMAGE_MAGIC = (
+    b"\xff\xd8\xff",       # JPEG
+    b"\x89PNG",            # PNG
+    b"RIFF",               # WebP (RIFF....WEBP)
+    b"GIF",                # GIF
+    b"\x00\x00\x01\x00",  # ICO
+)
+
+def _is_image(data: bytes) -> bool:
+    return any(data.startswith(sig) for sig in _IMAGE_MAGIC)
+
+def shrink_image(path: Path) -> tuple:
+    """Return (bytes, content_type), resizing to < 100 KB if needed.
+    Raises SystemExit if the file is not a recognised image format."""
+    data = path.read_bytes()
+
+    if not _is_image(data):
+        raise SystemExit(f"Not a recognised image file: {path.name} (got HTML or unknown format)")
+
+    if len(data) <= MAX_UPLOAD_BYTES:
+        ct = mimetypes.guess_type(str(path))[0] or "image/jpeg"
+        return data, ct
+
+    print(f"  image is {len(data) // 1024} KB, resizing to < 100 KB...", file=sys.stderr)
+
+    # Try Pillow first
+    try:
+        from PIL import Image  # type: ignore
+
+        img = Image.open(io.BytesIO(data)).convert("RGB")
+        w, h = img.size
+        for scale in (1.0, 0.75, 0.5, 0.35, 0.25):
+            sized = img.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS) if scale < 1.0 else img
+            for quality in (85, 60, 40, 20):
+                buf = io.BytesIO()
+                sized.save(buf, format="JPEG", quality=quality, optimize=True)
+                result = buf.getvalue()
+                if len(result) <= MAX_UPLOAD_BYTES:
+                    print(f"  → {len(result) // 1024} KB (scale={scale}, quality={quality})", file=sys.stderr)
+                    return result, "image/jpeg"
+    except Exception:
+        pass  # PIL not installed or can't open — fall through to sips
+
+    # Fallback: sips (macOS built-in)
+    abs_path = path.resolve()
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp_path = Path(tmp.name)
+    try:
+        for width in (1200, 800, 600, 400, 250):
+            subprocess.run(
+                ["sips", "-s", "format", "jpeg", str(abs_path), "--resampleWidth", str(width), "--out", str(tmp_path)],
+                check=True, capture_output=True,
+            )
+            result = tmp_path.read_bytes()
+            if len(result) <= MAX_UPLOAD_BYTES:
+                print(f"  → {len(result) // 1024} KB (sips width={width})", file=sys.stderr)
+                return result, "image/jpeg"
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+    raise SystemExit("Cannot shrink image below 100 KB")
 
 # ── Env ────────────────────────────────────────────────────────────────────
 
@@ -61,8 +128,7 @@ def main():
     api_base = env("API_BASE_URL").rstrip("/")
     api_key = env("SCRAPER_API_KEY")
 
-    content_type = mimetypes.guess_type(str(image_path))[0] or "image/jpeg"
-    image_data = image_path.read_bytes()
+    image_data, content_type = shrink_image(image_path)
     boundary = "----WelBBoundary7MA4YWxkTrZu0gW"
 
     body = encode_multipart("image", image_path.name, image_data, content_type, boundary)

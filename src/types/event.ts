@@ -30,6 +30,7 @@ export interface EventModel {
   isSuggested: boolean;
   isVerified: boolean;
   isActive: boolean;
+  refId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -76,6 +77,7 @@ export type EventRow = {
   is_suggested?: boolean;
   is_verified?: boolean;
   is_active?: boolean;
+  ref_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -102,6 +104,7 @@ export function mapRowToEvent(row: EventRow): EventModel {
     isSuggested: row.is_suggested ?? false,
     isVerified: row.is_verified ?? false,
     isActive: row.is_active ?? true,
+    refId: row.ref_id ?? null,
     createdAt: row.created_at ? new Date(row.created_at) : new Date(0),
     updatedAt: row.updated_at ? new Date(row.updated_at) : new Date(0),
   };

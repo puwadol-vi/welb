@@ -38,6 +38,17 @@ All API docs live in `docs/`. Always read the relevant doc before calling an API
 6. Runs `python3 scripts/create_event.py` → calls `/api/create-event` with `imageUrl` and `eventUrl`
 7. Saves all results to `data/events/` and updates logs
 
+## Soft update
+
+When a previously-created event has changed data or a new image, use a **soft update** instead of modifying the existing record:
+
+- `PATCH /api/event/events/:id` with changed fields
+- The old event stays untouched (`is_verified = true`, `is_active = true`, `ref_id = null`)
+- A new unverified event is created (`is_verified = false`, `is_active = true`, `ref_id = old_id`)
+- The user reviews and verifies the new record
+
+See `docs/event/PATCH-EVENT.md` for the full API spec.
+
 ## Data layout
 
 ```
@@ -68,6 +79,9 @@ python3 scripts/upload_image.py data/posts/2026-05-20/images/<file.jpg>
 
 # Create a single event from a JSON file
 python3 scripts/create_event.py data/events/2026-05-20/pending/<postId>.json
+
+# Soft-update an existing event (creates new unverified version with ref_id)
+python3 scripts/update_event.py <old-event-id> data/events/2026-05-20/pending/<postId>.json
 ```
 
 ## Environment variables

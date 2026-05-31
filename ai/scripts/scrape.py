@@ -18,10 +18,12 @@ https://apify.com/apify/facebook-posts-scraper
 
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
 import urllib.error
+import urllib.parse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -47,6 +49,7 @@ def env(key):
 APIFY_BASE = "https://api.apify.com/v2"
 ACTOR_ID = "apify~facebook-posts-scraper"
 BANGKOK_OFFSET = timedelta(hours=7)
+BATCH_SIZE = 20  # results per page per Apify run
 
 # ── Date helpers ───────────────────────────────────────────────────────────
 
@@ -76,16 +79,65 @@ def save_posts(label: str, posts: list):
     d.mkdir(parents=True, exist_ok=True)
     (d / "raw.json").write_text(json.dumps(posts, ensure_ascii=False, indent=2))
 
-def download_image(url: str, dest: Path) -> bool:
-    if dest.exists():
-        return True
+_FB_PHOTO_RE = re.compile(r"facebook\.com/photo/?\?")
+
+def _resolve_fb_photo_url(url: str) -> str:
+    """Fetch the mobile Facebook /photo/?fbid= page and extract the real CDN image URL.
+    Returns the original url unchanged on any failure."""
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        # Use mobile URL — it returns simpler HTML with direct CDN image src attributes
+        mobile_url = url.replace("://www.facebook.com/", "://m.facebook.com/") \
+                        .replace("://web.facebook.com/", "://m.facebook.com/")
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+        req = urllib.request.Request(mobile_url, headers=headers)
         with urllib.request.urlopen(req, timeout=15) as resp:
-            dest.write_bytes(resp.read())
-        return True
+            html = resp.read().decode("utf-8", errors="replace")
+
+        # Find actual photo CDN URLs (not UI resources like rsrc.php).
+        # Facebook photo CDN paths contain /v/t39. or /v/t1. etc.
+        # Capture the full URL including query string (auth tokens), replacing HTML entities.
+        m = re.search(
+            r'https://[^\s"<>]+(?:fbcdn|scontent)[^\s"<>]+/v/[^\s"<>]+\.(?:jpg|jpeg|png|webp)[^\s"<>]*',
+            html,
+        )
+        if m:
+            return m.group(0).replace("&amp;", "&")
+
     except Exception:
-        return False
+        pass
+    return url
+
+def _resolve_image_url(url: str) -> str:
+    """If url points to a Facebook photo page (not a direct CDN file), resolve it to the CDN URL."""
+    if _FB_PHOTO_RE.search(url):
+        return _resolve_fb_photo_url(url)
+    return url
+
+_IMAGE_MAGIC = (b"\xff\xd8\xff", b"\x89PNG", b"RIFF", b"GIF8", b"WEBP")
+
+def download_image(url: str, dest: Path) -> tuple:
+    """Download image, resolving Facebook photo pages to real CDN URLs first.
+    Returns (success: bool, resolved_url: str) so callers can use the resolved URL."""
+    resolved = _resolve_image_url(url)
+    if dest.exists():
+        return True, resolved
+    try:
+        req = urllib.request.Request(resolved, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = resp.read()
+        # Reject HTML responses (happens when CDN URL has expired or is inaccessible)
+        if not any(data.startswith(sig) for sig in _IMAGE_MAGIC):
+            return False, resolved
+        dest.write_bytes(data)
+        return True, resolved
+    except Exception:
+        return False, resolved
 
 # ── Scrape log ─────────────────────────────────────────────────────────────
 
@@ -109,20 +161,54 @@ def update_scrape_log(label: str, pages: list, success: bool):
 
 # ── Apify API ──────────────────────────────────────────────────────────────
 
+_api_keys: list[str] = []
+_key_idx: int = 0
+
+def load_api_keys():
+    """Load APIFY_API_KEY_1, _2, _3, ... from env. Must call after load_env()."""
+    global _api_keys, _key_idx
+    keys = []
+    for i in range(1, 5):
+        val = os.environ.get(f"APIFY_API_KEY_{i}")
+        if val:
+            keys.append(val)
+        else:
+            break
+    if not keys:
+        raise SystemExit("No APIFY_API_KEY_1 / _2 / _3 found in environment")
+    _api_keys = keys
+    _key_idx = 0
+    print(f"  loaded {len(keys)} Apify API key(s)")
+
+def _rotate_key():
+    """Switch to the next API key. Raises if all keys are exhausted."""
+    global _key_idx
+    _key_idx += 1
+    if _key_idx >= len(_api_keys):
+        raise SystemExit(f"All {len(_api_keys)} Apify API key(s) exhausted (403 on all)")
+    print(f"  switching to Apify key {_key_idx + 1}/{len(_api_keys)}...")
+
 def apify_request(path: str, method="GET", body=None):
-    api_key = env("APIFY_API_KEY")
-    url = f"{APIFY_BASE}{path}?token={api_key}"
     data = json.dumps(body).encode() if body else None
     headers = {"Content-Type": "application/json"} if data else {}
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read())
+    while True:
+        url = f"{APIFY_BASE}{path}?token={_api_keys[_key_idx]}"
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 403:
+                _rotate_key()
+                continue
+            raise
 
-def start_run(page_urls: list, from_date: datetime) -> str:
+def start_run(page_urls: list, from_date: datetime, results_limit: int = BATCH_SIZE) -> str:
     payload = {
         "startUrls": [{"url": u} for u in page_urls],
-        "resultsLimit": 50,
+        "resultsLimit": results_limit,
         "onlyPostsNewerThan": from_date.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        "onlyPostsOlderThan": (from_date + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
     }
     result = apify_request(f"/acts/{ACTOR_ID}/runs", method="POST", body=payload)
     return result["data"]["id"]
@@ -144,7 +230,7 @@ def wait_for_run(run_id: str, timeout_sec=600) -> str:
 def fetch_dataset(dataset_id: str) -> list:
     result = apify_request(f"/datasets/{dataset_id}/items", )
     # dataset items endpoint returns a list directly
-    url = f"{APIFY_BASE}/datasets/{dataset_id}/items?token={env('APIFY_API_KEY')}&format=json&clean=true"
+    url = f"{APIFY_BASE}/datasets/{dataset_id}/items?token={_api_keys[_key_idx]}&format=json&clean=true"
     with urllib.request.urlopen(url, timeout=30) as resp:
         return json.loads(resp.read())
 
@@ -168,6 +254,34 @@ def normalize_post(raw: dict, default_page_url: str) -> dict:
         "pageUrl": str(raw.get("pageUrl") or default_page_url),
     }
 
+# ── Page URL matching ──────────────────────────────────────────────────────
+
+def _page_key(url: str) -> str:
+    """Normalize a Facebook URL to a comparable page identifier.
+    Handles: /handle/posts/xxx, /profile.php?id=xxx, /permalink.php?...&id=xxx
+    """
+    try:
+        p = urllib.parse.urlparse(url)
+        qs = urllib.parse.parse_qs(p.query)
+        # profile.php?id=xxx  or  permalink.php?story_fbid=xxx&id=xxx
+        if "id" in qs:
+            return qs["id"][0]
+        # /handle  or  /handle/posts/xxx  or  /handle/
+        parts = [x for x in p.path.split("/") if x and x not in ("posts", "photos", "videos")]
+        if parts:
+            return parts[0].lower()
+    except Exception:
+        pass
+    return url
+
+def _match_page(post_url: str, page_urls: list) -> str | None:
+    """Return the input page URL that owns the post, or None if unmatched."""
+    key = _page_key(post_url)
+    for page_url in page_urls:
+        if _page_key(page_url) == key:
+            return page_url
+    return None
+
 # ── Main scrape ────────────────────────────────────────────────────────────
 
 def scrape_date(label: str, pages: list):
@@ -182,31 +296,64 @@ def scrape_date(label: str, pages: list):
         update_scrape_log(label, pages, True)
         return
 
-    print(f"  starting Apify run for {len(pages)} page(s)...")
-    try:
-        run_id = start_run(pages, from_utc)
-    except Exception as e:
-        update_scrape_log(label, pages, False)
-        raise
+    def parse_ts(ts_str: str) -> datetime:
+        dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
-    try:
-        dataset_id = wait_for_run(run_id)
-    except Exception as e:
-        update_scrape_log(label, pages, False)
-        raise
+    all_posts: dict[str, dict] = {}    # postId → post (global dedup store)
+    active_pages = list(pages)
+    results_limit = BATCH_SIZE
+    run_num = 0
+    total_fetched = 0
 
-    raw_posts = fetch_dataset(dataset_id)
-    print(f"  fetched {len(raw_posts)} items from Apify")
+    while active_pages:
+        run_num += 1
+        print(f"  run {run_num}: {len(active_pages)} page(s), resultsLimit={results_limit}...")
 
-    posts = []
-    for raw in raw_posts:
-        post = normalize_post(raw, pages[0])
-        ts = datetime.fromisoformat(post["timestamp"].replace("Z", "+00:00"))
-        if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
-        if from_utc <= ts < to_utc:
-            posts.append(post)
+        try:
+            run_id = start_run(active_pages, from_utc, results_limit)
+        except Exception:
+            update_scrape_log(label, pages, False)
+            raise
 
+        try:
+            dataset_id = wait_for_run(run_id)
+        except Exception:
+            update_scrape_log(label, pages, False)
+            raise
+
+        raw_posts = fetch_dataset(dataset_id)
+        total_fetched += len(raw_posts)
+        print(f"  fetched {len(raw_posts)} items")
+
+        # Normalize, match to input page, deduplicate
+        per_page_count: dict[str, int] = {p: 0 for p in active_pages}
+        for raw in raw_posts:
+            post = normalize_post(raw, active_pages[0])
+            matched = _match_page(post["url"], active_pages)
+            if matched:
+                post["pageUrl"] = matched
+                per_page_count[matched] += 1
+                if post["id"] not in all_posts:
+                    all_posts[post["id"]] = post
+
+        # Pages that returned a full batch may have more posts in the window
+        # → re-run with a higher limit (cumulative: +BATCH_SIZE each round)
+        next_active = [
+            page for page in active_pages
+            if per_page_count.get(page, 0) >= results_limit
+        ]
+        if next_active:
+            results_limit += BATCH_SIZE
+        active_pages = next_active
+
+    print(f"  total fetched across {run_num} run(s): {total_fetched} items")
+
+    # Collect only posts inside the target date window
+    posts = [
+        post for post in all_posts.values()
+        if from_utc <= parse_ts(post["timestamp"]) < to_utc
+    ]
     print(f"  {len(posts)} posts within date window")
 
     # Download images
@@ -215,9 +362,14 @@ def scrape_date(label: str, pages: list):
     downloaded = 0
     for post in posts:
         for i, url in enumerate(post["imageUrls"]):
-            ext = url.split("?")[0].split(".")[-1][:4] or "jpg"
+            # Resolve first so extension comes from the real CDN URL
+            resolved = _resolve_image_url(url)
+            ext = resolved.split("?")[0].split(".")[-1][:4] or "jpg"
+            if ext.lower() not in ("jpg", "jpeg", "png", "webp", "gif"):
+                ext = "jpg"
             dest = img_dir / f"{post['id']}_{i}.{ext}"
-            if download_image(url, dest):
+            ok, _ = download_image(url, dest)
+            if ok:
                 post["localImagePaths"].append(str(dest))
                 downloaded += 1
 
@@ -228,6 +380,7 @@ def scrape_date(label: str, pages: list):
 
 def main():
     load_env()
+    load_api_keys()
     args = sys.argv[1:]
     date = None
     days = 1

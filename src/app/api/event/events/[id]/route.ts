@@ -54,48 +54,70 @@ export async function PATCH(
   try {
     const body = await request.json();
 
-    const update: Record<string, unknown> = {};
-    if (body.title !== undefined)            update.title             = body.title;
-    if (body.description !== undefined)      update.description       = body.description;
-    if (body.type !== undefined)             update.type              = body.type;
-    if (body.price !== undefined)            update.price             = body.price;
-    if (body.currency !== undefined)         update.currency          = body.currency;
-    if (body.startDate !== undefined)        update.start_date        = toISO(body.startDate);
-    if (body.endDate !== undefined)          update.end_date          = body.endDate != null ? toISO(body.endDate) : null;
-    if (body.location !== undefined)         update.location          = body.location;
-    if (body.organizerName !== undefined)    update.organizer_name    = body.organizerName;
-    if (body.imageUrl !== undefined)         update.image_url         = body.imageUrl;
-    if (body.eventUrl !== undefined)         update.event_url         = body.eventUrl;
-    if (body.registrationUrl !== undefined)  update.registration_url  = body.registrationUrl;
-    if (body.participantCount !== undefined) update.participant_count = body.participantCount;
-    if (body.spotId !== undefined)           update.spot_id           = body.spotId;
-    if (body.isWelBProject !== undefined)    update.is_welb_project   = body.isWelBProject;
-    if (body.isMarket !== undefined)         update.is_market         = body.isMarket;
-    if (body.isActive !== undefined)         update.is_active         = body.isActive;
-    if (body.isVerified !== undefined)       update.is_verified       = body.isVerified;
+    // Soft update: always creates a new unverified event referencing the old one.
+    // The old event is never mutated.
+    const supabase = createServerClient();
 
-    if (Object.keys(update).length === 0) {
+    const { data: old, error: fetchError } = await supabase
+      .from("events")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    const dataFields = [
+      "title", "description", "type", "price", "currency",
+      "startDate", "endDate", "location", "organizerName",
+      "imageUrl", "eventUrl", "registrationUrl", "participantCount",
+      "isWelBProject", "isMarket",
+    ];
+    const hasDataFields = dataFields.some((f) => body[f] !== undefined);
+    if (!hasDataFields) {
       return NextResponse.json(
         { error: "No updatable fields provided" },
         { status: 400 },
       );
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase
+    const { data: newEvent, error: insertError } = await supabase
       .from("events")
-      .update(update)
-      .eq("id", id)
+      .insert({
+        title:             body.title             ?? old.title,
+        description:       body.description       !== undefined ? body.description       : old.description,
+        type:              body.type              ?? old.type,
+        price:             body.price             !== undefined ? body.price             : old.price,
+        currency:          body.currency          !== undefined ? body.currency          : old.currency,
+        start_date:        body.startDate         ? toISO(body.startDate)               : old.start_date,
+        end_date:          body.endDate           !== undefined ? (body.endDate != null ? toISO(body.endDate) : null) : old.end_date,
+        location:          body.location          ?? old.location,
+        organizer_name:    body.organizerName     ?? old.organizer_name,
+        image_url:         body.imageUrl          !== undefined ? body.imageUrl          : old.image_url,
+        event_url:         body.eventUrl          !== undefined ? body.eventUrl          : old.event_url,
+        registration_url:  body.registrationUrl   !== undefined ? body.registrationUrl   : old.registration_url,
+        participant_count: body.participantCount  !== undefined ? body.participantCount  : old.participant_count,
+        spot_id:           old.spot_id,
+        is_welb_project:   body.isWelBProject     !== undefined ? body.isWelBProject     : old.is_welb_project,
+        is_market:         body.isMarket          !== undefined ? body.isMarket          : old.is_market,
+        is_suggested:      false,
+        is_verified:       false,
+        is_active:         true,
+        ref_id:            id,
+      })
       .select()
       .single();
 
-    if (error) {
-      const status = error.code === "PGRST116" ? 404 : 500;
-      const message = error.code === "PGRST116" ? "Event not found" : "Update failed";
-      return NextResponse.json({ error: message, details: error.message }, { status });
-    }
+    if (insertError) throw insertError;
 
-    return NextResponse.json({ success: true, event: data });
+    return NextResponse.json({
+      success: true,
+      action: "soft-updated",
+      oldId: id,
+      event: newEvent,
+      message: "New event version created (pending verification)",
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error", details: String(error) },

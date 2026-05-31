@@ -1,6 +1,11 @@
 ### PATCH /api/event/events/:id
 
-Update one or more fields of an existing event. Only provided fields are changed.
+Soft-update an existing event. Instead of mutating the original record, this always **creates a new unverified event** that copies all fields from the old event and applies the provided changes. The old event is left untouched (`is_verified = true`, `is_active = true`, `ref_id = null`).
+
+The new record has:
+- `is_verified = false` (pending review)
+- `is_active = true`
+- `ref_id = <old event id>`
 
 **Headers:** `Authorization: Bearer <SCRAPER_API_KEY>` (required).
 
@@ -8,11 +13,9 @@ Update one or more fields of an existing event. Only provided fields are changed
 
 | Param | Type   | Description    |
 | ----- | ------ | -------------- |
-| `id`  | string | UUID of event. |
+| `id`  | string | UUID of the existing event to soft-update. |
 
-**Request body:** JSON — include only the fields you want to update.
-
-#### Event fields (same as create)
+**Request body:** JSON — include only the fields you want to change. At least one field is required.
 
 | Field              | Type           | Description                   |
 | ------------------ | -------------- | ----------------------------- |
@@ -32,23 +35,15 @@ Update one or more fields of an existing event. Only provided fields are changed
 | `isWelBProject`    | boolean        | Whether it is a WelB project. |
 | `isMarket`         | boolean        | Whether it is a market event. |
 
-#### Admin fields
-
-| Field       | Type           | Description                    |
-| ----------- | -------------- | ------------------------------ |
-| `spotId`    | number \| null | Link to an existing spot.      |
-| `isActive`  | boolean        | Activate/deactivate the event. |
-| `isVerified`| boolean        | Mark the event as verified.    |
-
 **Responses:**
 
-| Status | Body                                                                |
-| ------ | ------------------------------------------------------------------- |
-| 200    | `{ "success": true, "event": { ...EventRow } }`                     |
-| 400    | `{ "error": "No updatable fields provided" }`                       |
-| 401    | `{ "error": "Unauthorized" }`                                       |
-| 404    | `{ "error": "Event not found or update failed", "details": "..." }` |
-| 500    | `{ "error": "Internal server error", "details": "..." }`            |
+| Status | Body                                                                                                          |
+| ------ | ------------------------------------------------------------------------------------------------------------- |
+| 200    | `{ "success": true, "action": "soft-updated", "oldId": "...", "event": { ...new EventRow }, "message": "..." }` |
+| 400    | `{ "error": "No updatable fields provided" }`                                                                 |
+| 401    | `{ "error": "Unauthorized" }`                                                                                 |
+| 404    | `{ "error": "Event not found" }`                                                                              |
+| 500    | `{ "error": "Internal server error", "details": "..." }`                                                      |
 
 **Example:**
 
@@ -58,10 +53,18 @@ Authorization: Bearer <key>
 Content-Type: application/json
 
 {
-  "spotId": 42,
-  "imageUrl": "https://example.com/image.jpg",
-  "participantCount": 150,
-  "isActive": true,
-  "isVerified": true
+  "imageUrl": "https://example.com/new-image.jpg",
+  "description": "Updated description with new details."
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "action": "soft-updated",
+  "oldId": "abc123-...",
+  "event": { "id": "def456-...", "ref_id": "abc123-...", "is_verified": false, ... },
+  "message": "New event version created (pending verification)"
 }
 ```
