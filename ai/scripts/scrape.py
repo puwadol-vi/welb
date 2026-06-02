@@ -185,7 +185,7 @@ def _rotate_key():
     global _key_idx
     _key_idx += 1
     if _key_idx >= len(_api_keys):
-        raise SystemExit(f"All {len(_api_keys)} Apify API key(s) exhausted (403 on all)")
+        raise SystemExit(f"All {len(_api_keys)} Apify API key(s) exhausted (402/403 on all)")
     print(f"  switching to Apify key {_key_idx + 1}/{len(_api_keys)}...")
 
 def apify_request(path: str, method="GET", body=None):
@@ -198,7 +198,7 @@ def apify_request(path: str, method="GET", body=None):
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read())
         except urllib.error.HTTPError as e:
-            if e.code == 403:
+            if e.code in (402, 403):
                 _rotate_key()
                 continue
             raise
